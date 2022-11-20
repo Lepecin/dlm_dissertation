@@ -1,12 +1,12 @@
 from objects import NormalModel, TransitionDensity
 import numpy
 from numpy import ndarray as Array
-from typing import Tuple
+from typing import Tuple, Union
 
 
 def transmutator(
     model: "NormalModel", transition: "TransitionDensity", modelonly: "bool" = False
-) -> "Tuple[NormalModel, TransitionDensity]":
+) -> "Union[Tuple[NormalModel, TransitionDensity], NormalModel]":
 
     m1 = model.mean
     s1 = model.covariance
