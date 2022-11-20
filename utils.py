@@ -27,3 +27,23 @@ def transmutator(
         return (NormalModel(m2, s2), TransitionDensity(b2, a2, v2))
 
     return NormalModel(m2, s2)
+
+
+def rand_obs(shape: "Tuple[int, int]") -> "NormalModel":
+
+    m: "Array" = numpy.random.random(shape)
+    s: "Array" = numpy.zeros(2 * (shape[0],))
+
+    return NormalModel(m, s)
+
+
+def rand_nnd(dim: "int", shape: "int") -> "Array":
+
+    a: "Array" = numpy.random.random((dim, dim + shape + 1))
+
+    return a.dot(a.T)
+
+
+def symmetrise(array: "Array") -> "Array":
+
+    return (array + array.T) / 2
