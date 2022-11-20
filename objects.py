@@ -1,6 +1,7 @@
 from numpy import ndarray as Array
 from dataclasses import dataclass
 
+
 @dataclass
 class NormalModel:
 
@@ -14,4 +15,3 @@ class TransitionDensity:
     bias: "Array"
     weights: "Array"
     covariance: "Array"
-
