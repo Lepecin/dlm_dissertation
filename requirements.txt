@@ -1,0 +1,6 @@
+# Standard kit
+black==22.10.0
+mypy
+
+# Utility kit
+numpy
