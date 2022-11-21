@@ -4,3 +4,4 @@ mypy
 
 # Utility kit
 numpy
+matplotlib
