@@ -1,4 +1,4 @@
-from objects import NormalModel, TransitionDensity
+from objects import NormalModel, TransitionDensity, JointModel, InvWishart
 import numpy
 from numpy import ndarray as Array
 from typing import Tuple, Union
@@ -27,6 +27,21 @@ def transmutator(
         return (NormalModel(m2, s2), TransitionDensity(b2, a2, v2))
 
     return NormalModel(m2, s2)
+
+
+def carpenter(model: "NormalModel", transition: "TransitionDensity") -> "JointModel":
+
+    s1 = model.covariance
+    a1 = transition.weights
+    derived = transmutator(model, transition, True)
+
+    return JointModel(model, derived, a1.dot(s1))
+
+
+# def optimiser(joint: "JointModel", invwishart: "InvWishart") -> "Array":
+
+#     m_y = joint.derived.mean
+#     m_x = joint.basis.mean
 
 
 def rand_obs(shape: "Tuple[int, int]") -> "NormalModel":
