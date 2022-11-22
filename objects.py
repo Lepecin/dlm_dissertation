@@ -15,3 +15,11 @@ class TransitionDensity:
     bias: "Array"
     weights: "Array"
     covariance: "Array"
+
+
+@dataclass
+class JointModel:
+
+    basis: "NormalModel"
+    derived: "NormalModel"
+    covariance: "Array"
