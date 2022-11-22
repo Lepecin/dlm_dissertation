@@ -23,3 +23,10 @@ class JointModel:
     basis: "NormalModel"
     derived: "NormalModel"
     covariance: "Array"
+
+
+@dataclass
+class InvWishart:
+
+    scale: "Array"
+    shape: "int"
