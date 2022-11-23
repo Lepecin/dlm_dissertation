@@ -1,7 +1,7 @@
 from objects import NormalModel, TransitionDensity, JointModel, InvWishart
 import numpy
 from numpy import ndarray as Array
-from typing import Tuple, Union
+from typing import Tuple, Union, List, Generator
 
 
 def transmutator(
@@ -67,3 +67,8 @@ def symmetrise(array: "Array") -> "Array":
 def relister(l: "list") -> "list":
 
     return [l[-1 - i] for i in range(len(l))]
+
+
+def model_extract(model_list: "List[NormalModel]") -> "Generator[float]":
+    for model in model_list:
+        yield model.mean.item()
