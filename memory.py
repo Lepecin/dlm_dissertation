@@ -1,6 +1,6 @@
 from objects import NormalModel, TransitionDensity
 from typing import List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -10,29 +10,29 @@ class DLModelMemory:
     state: "str" = "Nihilated"
 
     # Filtered models
-    fst: "List[NormalModel]" = list()
-    fsp: "List[NormalModel]" = list()
+    f1: "List[NormalModel]" = field(default_factory=list)
+    f2: "List[NormalModel]" = field(default_factory=list)
 
     # Evolved models
-    est: "List[NormalModel]" = list()
-    esp: "List[NormalModel]" = list()
+    e1: "List[NormalModel]" = field(default_factory=list)
+    e2: "List[NormalModel]" = field(default_factory=list)
 
     # Observed models
-    osp: "List[NormalModel]" = list()
+    o2: "List[NormalModel]" = field(default_factory=list)
 
     # Smoothed models
-    sst: "List[NormalModel]" = list()
-    ssp: "List[NormalModel]" = list()
+    s1: "List[NormalModel]" = field(default_factory=list)
+    s2: "List[NormalModel]" = field(default_factory=list)
 
     # Predicted models
-    pst: "List[NormalModel]" = list()
-    psp: "List[NormalModel]" = list()
+    p1: "List[NormalModel]" = field(default_factory=list)
+    p2: "List[NormalModel]" = field(default_factory=list)
 
     # Transitions
-    smoothers: "List[TransitionDensity]" = list()
-    evolvers: "List[TransitionDensity]" = list()
-    predictors: "List[TransitionDensity]" = list()
-    filters: "List[TransitionDensity]" = list()
+    smoothers: "List[TransitionDensity]" = field(default_factory=list)
+    evolvers: "List[TransitionDensity]" = field(default_factory=list)
+    predictors: "List[TransitionDensity]" = field(default_factory=list)
+    filters: "List[TransitionDensity]" = field(default_factory=list)
 
     def check(self: "DLModelMemory", state: "str") -> "None":
 
