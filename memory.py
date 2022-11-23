@@ -6,9 +6,6 @@ from dataclasses import dataclass, field
 @dataclass
 class DLModelMemory:
 
-    # Create state variable
-    state: "str" = "Nihilated"
-
     # Filtered models
     f1: "List[NormalModel]" = field(default_factory=list)
     f2: "List[NormalModel]" = field(default_factory=list)
@@ -34,6 +31,9 @@ class DLModelMemory:
     predictors: "List[TransitionDensity]" = field(default_factory=list)
     filters: "List[TransitionDensity]" = field(default_factory=list)
 
+    # Create state variable
+    state: "str" = "Nihilated"
+
     def check(self: "DLModelMemory", state: "str") -> "None":
 
         if not (self.state == state):
@@ -47,3 +47,20 @@ class DLModelMemory:
 
         self.check(state)
         self.restate(restate)
+
+
+@dataclass
+class DLModelPrimeMemory:
+
+    # Dimensional parameters
+    n: "int"
+    m: "int"
+    p: "int"
+
+    # Model's periods
+    period: "int"
+    beyond_period: "int"
+
+    n0: "NormalModel"
+    te: "TransitionDensity"
+    tp: "TransitionDensity"
