@@ -69,26 +69,29 @@ def backward(prime: "DLModelPrimeMemory", memory: "DLModelMemory") -> "DLModelMe
     return memory
 
 
-def beyond(prime: "DLModelPrimeMemory", memory: "DLModelMemory") -> "DLModelMemory":
+def beyond(
+    prime: "DLModelPrimeMemory", memory: "DLModelMemory", gen: "DLModelGenerator"
+) -> "DLModelMemory":
 
-    memory.p1.append(memory.f1[-1])
+    # State Prediction Intiation
+    nf0 = memory.f1[-1]
+    memory.p1.append(nf0)
 
-    memory.p2.append(memory.f2[-1])
+    # Space Prediction Initiation
+    nf00 = memory.f2[-1]
+    memory.p2.append(nf00)
 
     for i in range(prime.beyond_period):
 
+        # Predictive Evolution
         np1 = memory.p1[i]
-
-        # XXX implement generator for evolver
-
-        np1 = transmutator(np1, prime.te, True)
-
+        te = gen.gen_evolver(prime, memory, i, True)
+        np1 = transmutator(np1, te, True)
         memory.p1.append(np1)
 
-        # XXX implement generator for predictor
-
-        np2 = transmutator(np1, prime.tp, True)
-
+        # Predictive Prediction
+        tp = gen.gen_predictor(prime, memory, i, True)
+        np2 = transmutator(np1, tp, True)
         memory.p2.append(np2)
 
     return memory

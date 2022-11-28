@@ -37,14 +37,20 @@ class DLModelGenerator(Protocol):
 class DLModelTestGen:
     @staticmethod
     def gen_evolver(
-        prime: "DLModelPrimeMemory", memory: "DLModelMemory", index: "int"
+        prime: "DLModelPrimeMemory",
+        memory: "DLModelMemory",
+        index: "int",
+        ispred: "bool" = False,
     ) -> "TransitionDensity":
 
         return prime.te
 
     @staticmethod
     def gen_predictor(
-        prime: "DLModelPrimeMemory", memory: "DLModelMemory", index: "int"
+        prime: "DLModelPrimeMemory",
+        memory: "DLModelMemory",
+        index: "int",
+        ispred: "bool" = False,
     ) -> "TransitionDensity":
 
         return prime.tp
