@@ -7,21 +7,27 @@ from typing import Protocol
 class DLModelGenerator(Protocol):
     @staticmethod
     def gen_evolver(
-        prime: "DLModelPrimeMemory", memory: "DLModelMemory", index: "int"
+        prime: "DLModelPrimeMemory",
+        memory: "DLModelMemory",
+        index: "int",
+        ispred: "bool" = False,
     ) -> "TransitionDensity":
 
         ...
 
     @staticmethod
     def gen_predictor(
-        prime: "DLModelPrimeMemory", memory: "DLModelMemory"
+        prime: "DLModelPrimeMemory",
+        memory: "DLModelMemory",
+        index: "int",
+        ispred: "bool" = False,
     ) -> "TransitionDensity":
 
         ...
 
     @staticmethod
     def gen_primordial(
-        prime: "DLModelPrimeMemory", memory: "DLModelMemory", index: "int"
+        prime: "DLModelPrimeMemory", memory: "DLModelMemory"
     ) -> "NormalModel":
 
         ...

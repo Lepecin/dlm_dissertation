@@ -45,7 +45,7 @@ def forward(
 def backward(prime: "DLModelPrimeMemory", memory: "DLModelMemory") -> "DLModelMemory":
 
     # Smoothing Initiation
-    ns0 = memory.f1[prime.period + 1]
+    ns0 = memory.f1[prime.period]
     memory.s1.append(ns0)
 
     # Backward pass
