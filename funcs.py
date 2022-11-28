@@ -1,55 +1,42 @@
-from utils import rand_obs, transmutator, relister
+from operators import transmutator
+from utils import relister
 from memory import DLModelMemory, DLModelPrimeMemory
+from generate import DLModelGenerator
 
 
 def forward(
-    prime: "DLModelPrimeMemory",
-    memory: "DLModelMemory",
+    prime: "DLModelPrimeMemory", memory: "DLModelMemory", gen: "DLModelGenerator"
 ) -> "DLModelMemory":
 
-    # Add primordial state to filtered states
-    # XXX implement generator for primordial state
-    memory.f1.append(prime.n0)
+    # Primordial Initiation
+    n0 = gen.gen_primordial(prime, memory)
+    memory.f1.append(n0)
 
     # Forward pass
-    # For each time from zero to period - 1
     for i in range(prime.period):
 
-        # Prepare filtered state
+        # Evolution
         nf1 = memory.f1[i]
-
-        # XXX implement generator for evolver
-
-        # Create evolved state and smoother
-        ne1, ts = transmutator(nf1, prime.te)
-
+        te = gen.gen_evolver(prime, memory, i)
+        memory.evolvers.append(te)
+        ne1, ts = transmutator(nf1, te)
         memory.e1.append(ne1)
-
         memory.smoothers.append(ts)
 
-        # XXX implement generator for predictor
-
-        # Create evolved space and filter
-        ne2, tf = transmutator(ne1, prime.tp)
-
+        # Prediction
+        tp = gen.gen_predictor(prime, memory, i)
+        memory.predictors.append(tp)
+        ne2, tf = transmutator(ne1, tp)
         memory.e2.append(ne2)
 
-        # XXX implement generator for observation
-
-        # Generate an observation
-        memory.o2.append(rand_obs((prime.m, prime.n)))
-
-        # Prepare observed space
-        no2 = memory.o2[i]
-
-        # Create filtered state
+        # Filtration
+        no2 = gen.gen_observation(prime, memory, i)
+        memory.o2.append(no2)
         nf1 = transmutator(no2, tf, True)
-
         memory.f1.append(nf1)
 
-        # Create filtered space
-        nf2 = transmutator(nf1, prime.tp, True)
-
+        # Filtered Prediction
+        nf2 = transmutator(nf1, tp, True)
         memory.f2.append(nf2)
 
     return memory
@@ -57,27 +44,26 @@ def forward(
 
 def backward(prime: "DLModelPrimeMemory", memory: "DLModelMemory") -> "DLModelMemory":
 
-    memory.s1.append(memory.f1[-1])
+    # Smoothing Initiation
+    ns0 = memory.f1[prime.period + 1]
+    memory.s1.append(ns0)
 
     # Backward pass
     for i in range(prime.period):
 
+        # Smoothing
         ns1 = memory.s1[i]
-
         ts = memory.smoothers[-1 - i]
-
-        # XXX implement generator for predictor
-
-        ns2 = transmutator(ns1, prime.tp, True)
-
+        tp = memory.predictors[-1 - i]
+        ns2 = transmutator(ns1, tp, True)
         memory.s2.append(ns2)
 
+        # Smoothed Prediction
         ns1 = transmutator(ns1, ts, True)
-
         memory.s1.append(ns1)
 
+    # Reverse list orders
     memory.s1 = relister(memory.s1)
-
     memory.s2 = relister(memory.s2)
 
     return memory
