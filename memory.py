@@ -31,23 +31,6 @@ class DLModelMemory:
     predictors: "List[TransitionDensity]" = field(default_factory=list)
     filters: "List[TransitionDensity]" = field(default_factory=list)
 
-    # Create state variable
-    state: "str" = "Nihilated"
-
-    def check(self: "DLModelMemory", state: "str") -> "None":
-
-        if not (self.state == state):
-            raise BaseException(f"memory must be in state {state}")
-
-    def restate(self: "DLModelMemory", state: "str") -> "None":
-
-        self.state = state
-
-    def checknstate(self: "DLModelMemory", state: "str", restate: "str") -> "None":
-
-        self.check(state)
-        self.restate(restate)
-
 
 @dataclass
 class DLModelPrimeMemory:
