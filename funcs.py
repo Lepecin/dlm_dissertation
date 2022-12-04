@@ -169,6 +169,10 @@ def new_backward(
         # Append smoothed state to list of smoothed states
         memory.smoothed_states.append(smoothed_state)
 
+    memory.smoothed_states = relister(memory.smoothed_states)
+
+    memory.smoothed_spaces = relister(memory.smoothed_spaces)
+
     return memory
 
 
@@ -183,7 +187,7 @@ def new_beyond(
     memory.predicted_states.append(filtered_state)
 
     # Extract final filtered space
-    filtered_space = memory.filtered_spaces[prime_memory.forward_period]
+    filtered_space = memory.filtered_spaces[prime_memory.forward_period - 1]
 
     memory.predicted_spaces.append(filtered_space)
 
