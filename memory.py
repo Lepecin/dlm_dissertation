@@ -1,49 +1,63 @@
 from objects import NormalModel, TransitionDensity
 from typing import List
 from dataclasses import dataclass, field
+import numpy
 
 
 @dataclass
-class DLModelMemory:
+class MemoryDLM:
 
-    # Filtered models
-    f1: "List[NormalModel]" = field(default_factory=list)
-    f2: "List[NormalModel]" = field(default_factory=list)
+    # -- Space Models
 
-    # Evolved models
-    e1: "List[NormalModel]" = field(default_factory=list)
-    e2: "List[NormalModel]" = field(default_factory=list)
+    # Create a list for storing filtered states
+    filtered_states: "List[NormalModel]" = field(default_factory=list)
 
-    # Observed models
-    o2: "List[NormalModel]" = field(default_factory=list)
+    # Create a list for storing evolved states
+    evolved_states: "List[NormalModel]" = field(default_factory=list)
 
-    # Smoothed models
-    s1: "List[NormalModel]" = field(default_factory=list)
-    s2: "List[NormalModel]" = field(default_factory=list)
+    # Create list for storing smoothed states
+    smoothed_states: "List[NormalModel]" = field(default_factory=list)
 
-    # Predicted models
-    p1: "List[NormalModel]" = field(default_factory=list)
-    p2: "List[NormalModel]" = field(default_factory=list)
+    # Create list for storing predicted states
+    predicted_states: "List[NormalModel]" = field(default_factory=list)
 
-    # Transitions
+    # -- Space Models
+
+    # Create a list for storing evolved spaces
+    filtered_spaces: "List[NormalModel]" = field(default_factory=list)
+
+    # Create a list for storing evolved spaces
+    evolved_spaces: "List[NormalModel]" = field(default_factory=list)
+
+    # Create list for storing smoothed spaces
+    smoothed_spaces: "List[NormalModel]" = field(default_factory=list)
+
+    # Create list for storing predicted spaces
+    predicted_spaces: "List[NormalModel]" = field(default_factory=list)
+
+    # -- Transitions
+
+    # Create a list for storing smoothers
     smoothers: "List[TransitionDensity]" = field(default_factory=list)
-    evolvers: "List[TransitionDensity]" = field(default_factory=list)
-    predictors: "List[TransitionDensity]" = field(default_factory=list)
-    filters: "List[TransitionDensity]" = field(default_factory=list)
 
 
 @dataclass
-class DLModelPrimeMemory:
+class PrimeMemoryDLM:
 
-    # Dimensional parameters
-    n: "int"
-    m: "int"
-    p: "int"
+    # -- Periods
 
-    # Model's periods
-    period: "int"
+    forward_period: "int"
     beyond_period: "int"
 
-    n0: "NormalModel"
-    te: "TransitionDensity"
-    tp: "TransitionDensity"
+    # -- Models
+
+    primordial_model: "NormalModel"
+
+    # -- Transitions
+
+    evolver: "TransitionDensity"
+    observer: "TransitionDensity"
+
+    # -- Data
+
+    observations: "List[numpy.ndarray]"
