@@ -1,33 +1,69 @@
 from objects import NormalModel, TransitionDensity, JointModel
 from typing import Union, Tuple
-from numpy import ndarray as Array
 from typing import Tuple, Union
 import numpy
+from utils import symmetrise
 
 
 def transmutator(
-    model: "NormalModel", transition: "TransitionDensity", modelonly: "bool" = False
+    model: "NormalModel", transition: "TransitionDensity", model_only: "bool" = False
 ) -> "Union[Tuple[NormalModel, TransitionDensity], NormalModel]":
 
-    m1 = model.mean
-    s1 = model.covariance
+    # Extract parameters of model
+    mean_1 = model.mean
 
-    a1 = transition.weights
-    b1 = transition.bias
-    v1 = transition.covariance
+    covariance_1 = model.covariance
 
-    m2: "Array" = b1 + a1.dot(m1)
-    s2: "Array" = v1 + a1.dot(s1).dot(a1.T)
+    # Extract parameters of transition
+    weights_1 = transition.weights
 
-    if not modelonly:
+    bias_1 = transition.bias
 
-        a2: "Array" = s1.dot(a1.T).dot(numpy.linalg.inv((s2 + s2.T) / 2))
-        b2: "Array" = m1 - a2.dot(m2)
-        v2: "Array" = s1 - a2.dot(s2).dot(a2.T)
+    variation_1 = transition.covariance
 
-        return (NormalModel(m2, s2), TransitionDensity(b2, a2, v2))
+    # Create parameters of new model
+    mean_2: "numpy.ndarray" = bias_1 + weights_1.dot(mean_1)
 
-    return NormalModel(m2, s2)
+    covariance_2: "numpy.ndarray" = variation_1 + weights_1.dot(covariance_1).dot(
+        weights_1.T
+    )
+
+    # Create new model and prepare it for output
+    output = NormalModel(mean_2, covariance_2)
+
+    # If output is not only model
+    if not model_only:
+
+        # Create parameters of new transition
+        weights_2: "numpy.ndarray" = covariance_1.dot(weights_1.T).dot(
+            numpy.linalg.inv(symmetrise(covariance_2))
+        )
+
+        bias_2: "numpy.ndarray" = mean_1 - weights_2.dot(mean_2)
+
+        variation_2: "numpy.ndarray" = covariance_1 - weights_2.dot(covariance_2).dot(
+            weights_2.T
+        )
+
+        # Create new transition and prepare it for output with new model
+        output = (output, TransitionDensity(bias_2, weights_2, variation_2))
+
+    return output
+
+
+def observator(
+    observation: "numpy.ndarray", transition: "TransitionDensity"
+) -> "NormalModel":
+
+    # Extract models of transition
+    bias = transition.bias
+
+    weights = transition.weights
+
+    # Create new mean from observation
+    mean = bias + weights.dot(observation)
+
+    return NormalModel(mean=mean, covariance=transition.covariance)
 
 
 def carpenter(model: "NormalModel", transition: "TransitionDensity") -> "JointModel":
