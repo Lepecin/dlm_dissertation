@@ -1,69 +1,169 @@
 import math
-from scipy.linalg import block_diag
 import numpy
-from numpy import ndarray as Array
-from dataclasses import dataclass
+
+from scipy.linalg import block_diag
+from abc import ABC
+from typing import Tuple, List
 
 
-@dataclass
-class DLModelComponent:
+def basic_observation_matrix(dimension: "int") -> "numpy.ndarray":
 
-    obs_matrix: "Array" = numpy.zeros((1, 0))
-    trans_matrix: "Array" = numpy.zeros((0, 0))
+    shape: "Tuple[int]" = (1, dimension)
 
-    def __add__(
-        self: "DLModelComponent", other: "DLModelComponent"
-    ) -> "DLModelComponent":
+    observation_matrix: "numpy.ndarray" = numpy.zeros(shape)
 
-        trans = block_diag(self.trans_matrix, other.trans_matrix)
+    if dimension:
+        observation_matrix[0, 0] = 1
 
-        obs = numpy.column_stack([self.obs_matrix, other.obs_matrix])
-
-        return DLModelComponent(obs, trans)
+    return observation_matrix
 
 
-def gen_fullform(k: "int", l: "float") -> "DLModelComponent":
+def compound_observation_matrix(dimension: "int", amount: "int") -> "numpy.ndarray":
 
-    trans = numpy.eye(k)
-    trans = l * numpy.row_stack((trans[1:k], trans[0:1]))
+    matrix_template: "numpy.ndarray" = basic_observation_matrix(dimension=dimension)
 
-    obs = numpy.zeros((1, k))
-    obs[0, 0] = 1
+    matricies: "List[numpy.ndarray]" = amount * [matrix_template]
 
-    return DLModelComponent(obs, trans)
+    observation_matrix: "numpy.ndarray" = numpy.column_stack(tup=matricies)
 
-
-def gen_jordan(k: "int", l: "float") -> "DLModelComponent":
-
-    trans = l * numpy.eye(k)
-    trans = trans + numpy.row_stack((numpy.eye(k)[1:k], numpy.zeros((1, k))))
-
-    obs = numpy.zeros((1, k))
-    obs[0, 0] = 1
-
-    return DLModelComponent(obs, trans)
+    return observation_matrix
 
 
-def gen_harmonic(t: "float", l: "float") -> "DLModelComponent":
+def basic_transition_matrix() -> "numpy.ndarray":
 
-    trans = l * numpy.array(
+    shape: "Tuple[int]" = (0, 0)
+
+    transition_matrix: "numpy.ndarray" = numpy.zeros(shape)
+
+    return transition_matrix
+
+
+def form_free_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
+
+    transition_matrix: "numpy.ndarray" = factor * numpy.eye(dimension)
+
+    top_matrix: "numpy.ndarray" = transition_matrix[1:dimension]
+
+    bottom_matrix: "numpy.ndarray" = transition_matrix[0:1]
+
+    matricies: "List[numpy.ndarray]" = [top_matrix, bottom_matrix]
+
+    transition_matrix = numpy.row_stack(matricies)
+
+    return transition_matrix
+
+
+def polynomial_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
+
+    transition_matrix: "numpy.ndarray" = factor * numpy.eye(dimension)
+
+    top_matrix: "numpy.ndarray" = numpy.eye(dimension)[1:dimension]
+
+    bottom_matrix: "numpy.ndarray" = numpy.zeros((1, dimension))
+
+    matricies: "List[numpy.ndarray]" = [top_matrix, bottom_matrix]
+
+    transition_matrix = transition_matrix + numpy.row_stack(matricies)
+
+    return transition_matrix
+
+
+def harmonic_transition_matrix(period: "int", factor: "float") -> "numpy.ndarray":
+
+    frequency: "float" = 2 * math.pi / period
+
+    cosine: "float" = math.cos(frequency)
+
+    sine: "float" = math.sin(frequency)
+
+    transition_matrix: "numpy.ndarray" = factor * numpy.array(
         [
-            [math.cos(2 * math.pi / t), math.sin(2 * math.pi / t)],
-            [-math.sin(2 * math.pi / t), math.cos(2 * math.pi / t)],
+            [cosine, sine],
+            [-sine, cosine],
         ]
     )
 
-    obs = numpy.zeros((1, 2))
-    obs[0, 0] = 1
-
-    return DLModelComponent(obs, trans)
+    return transition_matrix
 
 
-def gen_harmonics(start: "int", end: "int", l: "float") -> "DLModelComponent":
+def harmonics_transition_matrix(
+    start: "int", amount: "int", factor: "float"
+) -> "numpy.ndarray":
 
-    model = DLModelComponent()
+    end: "int" = start + amount
 
-    for t in range(start, end):
-        model += gen_harmonic(t, l)
+    matricies: "List[numpy.ndarray]" = [
+        harmonic_transition_matrix(_, factor) for _ in range(start, end)
+    ]
 
-    return model
+    transition_matrix: "numpy.ndarray" = block_diag(*matricies)
+
+    return transition_matrix
+
+
+class ModelComponent(ABC):
+
+    dimension: "int" = None
+    factor: "float" = None
+    start: "int" = None
+    amount: "int" = None
+
+    def __init__(self: "ModelComponent") -> "None":
+        pass
+
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        pass
+
+    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
+        pass
+
+
+class BasicComponent(ModelComponent):
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        return basic_transition_matrix()
+
+    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
+        return basic_observation_matrix(dimension=0)
+
+
+class FormFreeComponent(ModelComponent):
+    def __init__(self: "ModelComponent", dimension: "int", factor: "float") -> "None":
+        self.dimension = dimension
+        self.factor = factor
+
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        return form_free_transition_matrix(dimension=self.dimension, factor=self.factor)
+
+    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
+        return basic_observation_matrix(dimension=self.dimension)
+
+
+class PolynomialComponent(ModelComponent):
+    def __init__(self: "ModelComponent", dimension: "int", factor: "float") -> "None":
+        self.dimension = dimension
+        self.factor = factor
+
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        return polynomial_transition_matrix(
+            dimension=self.dimension, factor=self.factor
+        )
+
+    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
+        return basic_observation_matrix(dimension=self.dimension)
+
+
+class HarmonicsComponent(ModelComponent):
+    def __init__(
+        self: "ModelComponent", start: "int", amount: "int", factor: "float"
+    ) -> "None":
+        self.start = start
+        self.amount = amount
+        self.factor = factor
+
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        return harmonics_transition_matrix(
+            start=self.start, amount=self.amount, factor=self.factor
+        )
+
+    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
+        return compound_observation_matrix(dimension=2, amount=self.amount)
