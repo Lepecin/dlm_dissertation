@@ -5,6 +5,8 @@ from scipy.linalg import block_diag
 from abc import ABC
 from typing import Tuple, List
 
+from utils import array_slicer
+
 
 def basic_observation_matrix(dimension: "int") -> "numpy.ndarray":
 
@@ -33,7 +35,7 @@ def basic_transition_matrix(dimension: "int") -> "numpy.ndarray":
 
     shape: "Tuple[int]" = (dimension, dimension)
 
-    transition_matrix: "numpy.ndarray" = numpy.zeros(shape)
+    transition_matrix: "numpy.ndarray" = numpy.eye(*shape)
 
     return transition_matrix
 
@@ -99,6 +101,19 @@ def harmonics_transition_matrix(
     ]
 
     transition_matrix: "numpy.ndarray" = block_diag(*matricies)
+
+    return transition_matrix
+
+
+def autoregression_transition_matrix(
+    dimension: "int", data: "numpy.ndarray"
+) -> "numpy.ndarray":
+
+    data: "numpy.ndarray" = numpy.expand_dims(data, axis=0)
+
+    identity_slice: "numpy.ndarray" = numpy.eye(dimension - 1, dimension)
+
+    transition_matrix: "numpy.ndarray" = numpy.row_stack([data, identity_slice])
 
     return transition_matrix
 
@@ -179,9 +194,24 @@ class RegressionComponent(ModelComponent):
         self.data = data
         self.dimension = dimension
 
-    pass
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        return basic_transition_matrix(dimension=self.dimension)
+
+    def generate_observation(self: "ModelComponent", start: "int") -> "numpy.ndarray":
+        return array_slicer(array=self.data, start=start, amount=self.dimension)
 
 
 class AutoRegressionComponent(ModelComponent):
-    def __init__(self: "ModelComponent") -> "None":
-        pass
+    def __init__(
+        self: "ModelComponent", dimension: "int", data: "numpy.ndarray"
+    ) -> "None":
+        self.data = data
+        self.dimension = dimension
+
+    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
+        return autoregression_transition_matrix(
+            dimension=self.dimension, data=self.data
+        )
+
+    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
+        return basic_observation_matrix(dimension=self.dimension)
