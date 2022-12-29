@@ -3,7 +3,7 @@ from utils import relister
 from memory import MemoryDLM, PrimeMemoryDLM
 
 
-def new_forward(prime_memory: "PrimeMemoryDLM") -> "MemoryDLM":
+def forward(prime_memory: "PrimeMemoryDLM") -> "MemoryDLM":
 
     # Create memory
     memory = MemoryDLM()
@@ -64,7 +64,7 @@ def new_forward(prime_memory: "PrimeMemoryDLM") -> "MemoryDLM":
     return memory
 
 
-def new_backward(
+def backward(
     prime_memory: "PrimeMemoryDLM",
     memory: "MemoryDLM",
 ) -> "MemoryDLM":
@@ -111,10 +111,10 @@ def new_backward(
     return memory
 
 
-def new_beyond(
+def beyond(
     prime_memory: "PrimeMemoryDLM",
     memory: "MemoryDLM",
-):
+) -> "MemoryDLM":
 
     # Extract final filtered state
     filtered_state = memory.filtered_states[prime_memory.forward_period]
