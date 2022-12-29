@@ -29,9 +29,9 @@ def compound_observation_matrix(dimension: "int", amount: "int") -> "numpy.ndarr
     return observation_matrix
 
 
-def basic_transition_matrix() -> "numpy.ndarray":
+def basic_transition_matrix(dimension: "int") -> "numpy.ndarray":
 
-    shape: "Tuple[int]" = (0, 0)
+    shape: "Tuple[int]" = (dimension, dimension)
 
     transition_matrix: "numpy.ndarray" = numpy.zeros(shape)
 
@@ -59,7 +59,9 @@ def polynomial_transition_matrix(dimension: "int", factor: "float") -> "numpy.nd
 
     top_matrix: "numpy.ndarray" = numpy.eye(dimension)[1:dimension]
 
-    bottom_matrix: "numpy.ndarray" = numpy.zeros((1, dimension))
+    shape: "Tuple[int]" = (1, dimension)
+
+    bottom_matrix: "numpy.ndarray" = numpy.zeros(shape)
 
     matricies: "List[numpy.ndarray]" = [top_matrix, bottom_matrix]
 
@@ -103,10 +105,11 @@ def harmonics_transition_matrix(
 
 class ModelComponent(ABC):
 
-    dimension: "int" = None
-    factor: "float" = None
-    start: "int" = None
-    amount: "int" = None
+    dimension: "int"
+    factor: "float"
+    start: "int"
+    amount: "int"
+    data: "numpy.ndarray"
 
     def __init__(self: "ModelComponent") -> "None":
         pass
@@ -120,7 +123,7 @@ class ModelComponent(ABC):
 
 class BasicComponent(ModelComponent):
     def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_transition_matrix()
+        return basic_transition_matrix(dimension=0)
 
     def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
         return basic_observation_matrix(dimension=0)
@@ -167,3 +170,18 @@ class HarmonicsComponent(ModelComponent):
 
     def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
         return compound_observation_matrix(dimension=2, amount=self.amount)
+
+
+class RegressionComponent(ModelComponent):
+    def __init__(
+        self: "ModelComponent", dimension: "int", data: "numpy.ndarray"
+    ) -> "None":
+        self.data = data
+        self.dimension = dimension
+
+    pass
+
+
+class AutoRegressionComponent(ModelComponent):
+    def __init__(self: "ModelComponent") -> "None":
+        pass
