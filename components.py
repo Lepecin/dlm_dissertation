@@ -2,20 +2,18 @@ import math
 import numpy
 
 from scipy.linalg import block_diag
-from abc import ABC
 from typing import Tuple, List
+from dataclasses import dataclass
 
 from utils import array_slicer
 
 
 def basic_observation_matrix(dimension: "int") -> "numpy.ndarray":
 
-    shape: "Tuple[int]" = (1, dimension)
-
-    observation_matrix: "numpy.ndarray" = numpy.zeros(shape)
+    observation_matrix: "numpy.ndarray" = numpy.zeros((dimension,))
 
     if dimension:
-        observation_matrix[0, 0] = 1
+        observation_matrix[0] = 1
 
     return observation_matrix
 
@@ -26,7 +24,7 @@ def compound_observation_matrix(dimension: "int", amount: "int") -> "numpy.ndarr
 
     matricies: "List[numpy.ndarray]" = amount * [matrix_template]
 
-    observation_matrix: "numpy.ndarray" = numpy.column_stack(tup=matricies)
+    observation_matrix: "numpy.ndarray" = numpy.concatenate(matricies)
 
     return observation_matrix
 
@@ -117,108 +115,93 @@ def form_free_transition_matrix(dimension: "int", factor: "float") -> "numpy.nda
     return transition_matrix
 
 
-class ModelComponent(ABC):
+@dataclass
+class ModelComponent:
 
     dimension: "int"
-    factor: "float"
-    start: "int"
-    amount: "int"
-    data: "numpy.ndarray"
-
-    def __init__(self: "ModelComponent") -> "None":
-        pass
-
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        pass
-
-    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        pass
+    transition_matrix: "numpy.ndarray"
+    observation_matrix: "numpy.ndarray"
 
 
-class RootComponent(ModelComponent):
-    def __init__(self: "ModelComponent", dimension: "int") -> "None":
-        self.dimension = dimension
+class ComponentFactory:
+    def __init__(self: "ComponentFactory", component: "str") -> "None":
+        if component == "root":
+            self.__call__ = self._create_root
+        elif component == "form_free":
+            self.__call__ = self._create_form_free
+        elif component == "polynomial":
+            self.__call__ = self._create_polynomial
+        elif component == "harmonics":
+            self.__call__ = self._create_harmonics
 
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_transition_matrix(dimension=0)
+    def _create_root(dimension: "int") -> "ModelComponent":
 
-    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_observation_matrix(dimension=0)
+        transition_matrix: "numpy.ndarray" = basic_transition_matrix(dimension=0)
 
+        observation_matrix: "numpy.ndarray" = basic_observation_matrix(dimension=0)
 
-class FormFreeComponent(ModelComponent):
-    def __init__(
-        self: "ModelComponent", dimension: "int", factor: "float" = 1
-    ) -> "None":
-        self.dimension = dimension
-        self.factor = factor
+        return ModelComponent(dimension, transition_matrix, observation_matrix)
 
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return form_free_transition_matrix(dimension=self.dimension, factor=self.factor)
+    def _create_form_free(dimension: "int", factor: "float" = 1) -> "ModelComponent":
 
-    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_observation_matrix(dimension=self.dimension)
-
-
-class PolynomialComponent(ModelComponent):
-    def __init__(
-        self: "ModelComponent", dimension: "int", factor: "float" = 1
-    ) -> "None":
-        self.dimension = dimension
-        self.factor = factor
-
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return polynomial_transition_matrix(
-            dimension=self.dimension, factor=self.factor
+        transition_matrix: "numpy.ndarray" = form_free_transition_matrix(
+            dimension=dimension, factor=factor
         )
 
-    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_observation_matrix(dimension=self.dimension)
-
-
-class HarmonicsComponent(ModelComponent):
-    def __init__(
-        self: "ModelComponent", start: "int", amount: "int", factor: "float" = 1
-    ) -> "None":
-        self.start = start
-        self.amount = amount
-        self.factor = factor
-        self.dimension = amount * 2
-
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return harmonics_transition_matrix(
-            start=self.start, amount=self.amount, factor=self.factor
+        observation_matrix: "numpy.ndarray" = basic_observation_matrix(
+            dimension=dimension
         )
 
-    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return compound_observation_matrix(dimension=2, amount=self.amount)
+        return ModelComponent(dimension, transition_matrix, observation_matrix)
 
+    def _create_polynomial(dimension: "int", factor: "float" = 1) -> "ModelComponent":
 
-class RegressionComponent(ModelComponent):
-    def __init__(
-        self: "ModelComponent", dimension: "int", data: "numpy.ndarray"
-    ) -> "None":
-        self.data = data
-        self.dimension = dimension
-
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_transition_matrix(dimension=self.dimension)
-
-    def generate_observation(self: "ModelComponent", start: "int") -> "numpy.ndarray":
-        return array_slicer(array=self.data, start=start, amount=self.dimension)
-
-
-class AutoRegressionComponent(ModelComponent):
-    def __init__(
-        self: "ModelComponent", dimension: "int", data: "numpy.ndarray"
-    ) -> "None":
-        self.data = data
-        self.dimension = dimension
-
-    def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return autoregression_transition_matrix(
-            dimension=self.dimension, data=self.data
+        transition_matrix: "numpy.ndarray" = polynomial_transition_matrix(
+            dimension=dimension, factor=factor
         )
 
-    def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_observation_matrix(dimension=self.dimension)
+        observation_matrix: "numpy.ndarray" = basic_observation_matrix(
+            dimension=dimension
+        )
+
+        return ModelComponent(dimension, transition_matrix, observation_matrix)
+
+    def _create_harmonics(
+        start: "int", amount: "int", factor: "float" = 1
+    ) -> "ModelComponent":
+
+        transition_matrix: "numpy.ndarray" = harmonics_transition_matrix(
+            start=start, amount=amount, factor=factor
+        )
+
+        observation_matrix: "numpy.ndarray" = compound_observation_matrix(
+            dimension=2, amount=amount
+        )
+
+        return ModelComponent(2 * amount, transition_matrix, observation_matrix)
+
+    def _create_regression(
+        dimension: "int", data: "numpy.ndarray", start: "int"
+    ) -> "ModelComponent":
+
+        transition_matrix: "numpy.ndarray" = basic_transition_matrix(
+            dimension=dimension
+        )
+
+        observation_matrix: "numpy.ndarray" = array_slicer(
+            array=data, start=start, amount=dimension
+        )
+
+        return ModelComponent(dimension, transition_matrix, observation_matrix)
+
+    def _create_regression(dimension: "int", data: "numpy.ndarray") -> "ModelComponent":
+
+        transition_matrix: "numpy.ndarray" = autoregression_transition_matrix(
+            dimension=dimension, data=data
+        )
+
+        observation_matrix: "numpy.ndarray" = basic_observation_matrix(
+            dimension=dimension
+        )
+
+        return ModelComponent(dimension, transition_matrix, observation_matrix)
