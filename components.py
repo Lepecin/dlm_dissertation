@@ -135,15 +135,15 @@ class ModelComponent(ABC):
         pass
 
 
-class BasicComponent(ModelComponent):
-    def __init__(self: "ModelComponent") -> "None":
-        self.dimension = 0
+class RootComponent(ModelComponent):
+    def __init__(self: "ModelComponent", dimension: "int") -> "None":
+        self.dimension = dimension
 
     def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_transition_matrix(dimension=self.dimension)
+        return basic_transition_matrix(dimension=0)
 
     def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_observation_matrix(dimension=self.dimension)
+        return basic_observation_matrix(dimension=0)
 
 
 class FormFreeComponent(ModelComponent):
