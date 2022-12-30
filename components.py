@@ -5,7 +5,34 @@ from scipy.linalg import block_diag
 from typing import Tuple, List
 from dataclasses import dataclass
 
-from utils import array_slicer
+
+def array_slicer(
+    array: "numpy.ndarray", start: "int", amount: "int"
+) -> "numpy.ndarray":
+
+    length: "int" = len(array)
+
+    end: "int" = start + amount
+
+    left_bound: "int" = max(min(start, length), 0)
+
+    right_bound: "int" = min(max(end, 0), length)
+
+    left_length: "int" = min(end, 0) - min(start, 0)
+
+    right_length: "int" = max(end, length) - max(start, length)
+
+    array = array[left_bound:right_bound]
+
+    if start < 0:
+
+        array = numpy.concatenate([numpy.zeros(left_length), array])
+
+    if length < end:
+
+        array = numpy.concatenate([array, numpy.zeros(right_length)])
+
+    return array
 
 
 def basic_observation_matrix(dimension: "int") -> "numpy.ndarray":
