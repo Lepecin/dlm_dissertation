@@ -136,11 +136,14 @@ class ModelComponent(ABC):
 
 
 class BasicComponent(ModelComponent):
+    def __init__(self: "ModelComponent") -> "None":
+        self.dimension = 0
+
     def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_transition_matrix(dimension=0)
+        return basic_transition_matrix(dimension=self.dimension)
 
     def generate_observation(self: "ModelComponent") -> "numpy.ndarray":
-        return basic_observation_matrix(dimension=0)
+        return basic_observation_matrix(dimension=self.dimension)
 
 
 class FormFreeComponent(ModelComponent):
@@ -176,6 +179,7 @@ class HarmonicsComponent(ModelComponent):
         self.start = start
         self.amount = amount
         self.factor = factor
+        self.dimension = amount * 2
 
     def generate_transition(self: "ModelComponent") -> "numpy.ndarray":
         return harmonics_transition_matrix(
