@@ -124,17 +124,8 @@ class ModelComponent:
 
 
 class ComponentFactory:
-    def __init__(self: "ComponentFactory", component: "str") -> "None":
-        if component == "root":
-            self.__call__ = self._create_root
-        elif component == "form_free":
-            self.__call__ = self._create_form_free
-        elif component == "polynomial":
-            self.__call__ = self._create_polynomial
-        elif component == "harmonics":
-            self.__call__ = self._create_harmonics
-
-    def _create_root(dimension: "int") -> "ModelComponent":
+    @staticmethod
+    def create_root(dimension: "int") -> "ModelComponent":
 
         transition_matrix: "numpy.ndarray" = basic_transition_matrix(dimension=0)
 
@@ -142,7 +133,8 @@ class ComponentFactory:
 
         return ModelComponent(dimension, transition_matrix, observation_matrix)
 
-    def _create_form_free(dimension: "int", factor: "float" = 1) -> "ModelComponent":
+    @staticmethod
+    def create_form_free(dimension: "int", factor: "float" = 1) -> "ModelComponent":
 
         transition_matrix: "numpy.ndarray" = form_free_transition_matrix(
             dimension=dimension, factor=factor
@@ -154,7 +146,8 @@ class ComponentFactory:
 
         return ModelComponent(dimension, transition_matrix, observation_matrix)
 
-    def _create_polynomial(dimension: "int", factor: "float" = 1) -> "ModelComponent":
+    @staticmethod
+    def create_polynomial(dimension: "int", factor: "float" = 1) -> "ModelComponent":
 
         transition_matrix: "numpy.ndarray" = polynomial_transition_matrix(
             dimension=dimension, factor=factor
@@ -166,7 +159,8 @@ class ComponentFactory:
 
         return ModelComponent(dimension, transition_matrix, observation_matrix)
 
-    def _create_harmonics(
+    @staticmethod
+    def create_harmonics(
         start: "int", amount: "int", factor: "float" = 1
     ) -> "ModelComponent":
 
@@ -180,7 +174,8 @@ class ComponentFactory:
 
         return ModelComponent(2 * amount, transition_matrix, observation_matrix)
 
-    def _create_regression(
+    @staticmethod
+    def create_regression(
         dimension: "int", data: "numpy.ndarray", start: "int"
     ) -> "ModelComponent":
 
@@ -194,7 +189,10 @@ class ComponentFactory:
 
         return ModelComponent(dimension, transition_matrix, observation_matrix)
 
-    def _create_regression(dimension: "int", data: "numpy.ndarray") -> "ModelComponent":
+    @staticmethod
+    def create_autoregression(
+        dimension: "int", data: "numpy.ndarray"
+    ) -> "ModelComponent":
 
         transition_matrix: "numpy.ndarray" = autoregression_transition_matrix(
             dimension=dimension, data=data
