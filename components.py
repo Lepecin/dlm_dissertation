@@ -147,7 +147,9 @@ class BasicComponent(ModelComponent):
 
 
 class FormFreeComponent(ModelComponent):
-    def __init__(self: "ModelComponent", dimension: "int", factor: "float") -> "None":
+    def __init__(
+        self: "ModelComponent", dimension: "int", factor: "float" = 1
+    ) -> "None":
         self.dimension = dimension
         self.factor = factor
 
@@ -159,7 +161,9 @@ class FormFreeComponent(ModelComponent):
 
 
 class PolynomialComponent(ModelComponent):
-    def __init__(self: "ModelComponent", dimension: "int", factor: "float") -> "None":
+    def __init__(
+        self: "ModelComponent", dimension: "int", factor: "float" = 1
+    ) -> "None":
         self.dimension = dimension
         self.factor = factor
 
@@ -174,7 +178,7 @@ class PolynomialComponent(ModelComponent):
 
 class HarmonicsComponent(ModelComponent):
     def __init__(
-        self: "ModelComponent", start: "int", amount: "int", factor: "float"
+        self: "ModelComponent", start: "int", amount: "int", factor: "float" = 1
     ) -> "None":
         self.start = start
         self.amount = amount
