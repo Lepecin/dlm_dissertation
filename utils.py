@@ -34,35 +34,6 @@ def model_extract(model_list: "List[NormalModel]") -> "Generator[float]":
         yield model.mean.item()
 
 
-def array_slicer(
-    array: "numpy.ndarray", start: "int", amount: "int"
-) -> "numpy.ndarray":
-
-    length: "int" = len(array)
-
-    end: "int" = start + amount
-
-    left_bound: "int" = max(min(start, length), 0)
-
-    right_bound: "int" = min(max(end, 0), length)
-
-    left_length: "int" = min(end, 0) - min(start, 0)
-
-    right_length: "int" = max(end, length) - max(start, length)
-
-    array = array[left_bound:right_bound]
-
-    if start < 0:
-
-        array = numpy.concatenate([numpy.zeros(left_length), array])
-
-    if length < end:
-
-        array = numpy.concatenate([array, numpy.zeros(right_length)])
-
-    return array
-
-
 def random_nan(array: "numpy.ndarray", nans: "int") -> "numpy.ndarray":
 
     random_indices: "numpy.ndarray" = numpy.random.choice(
@@ -72,12 +43,3 @@ def random_nan(array: "numpy.ndarray", nans: "int") -> "numpy.ndarray":
     numpy.put(array, random_indices, numpy.nan)
 
     return array
-
-
-def clean_int_list(int_list: "List[int]") -> "List[int]":
-
-    int_list: "List[int]" = list(set(int_list))
-
-    int_list.sort(key=(lambda x: x))
-
-    return int_list
