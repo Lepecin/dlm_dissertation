@@ -61,3 +61,14 @@ def array_slicer(
         array = numpy.concatenate([array, numpy.zeros(right_length)])
 
     return array
+
+
+def random_nan(array: "numpy.ndarray", nans: "int") -> "numpy.ndarray":
+
+    random_indices: "numpy.ndarray" = numpy.random.choice(
+        array.size, nans, replace=False
+    )
+
+    numpy.put(array, random_indices, numpy.nan)
+
+    return array
