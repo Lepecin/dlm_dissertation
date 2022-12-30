@@ -40,21 +40,6 @@ def basic_transition_matrix(dimension: "int") -> "numpy.ndarray":
     return transition_matrix
 
 
-def form_free_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
-
-    transition_matrix: "numpy.ndarray" = factor * numpy.eye(dimension)
-
-    top_matrix: "numpy.ndarray" = transition_matrix[1:dimension]
-
-    bottom_matrix: "numpy.ndarray" = transition_matrix[0:1]
-
-    matricies: "List[numpy.ndarray]" = [top_matrix, bottom_matrix]
-
-    transition_matrix = numpy.row_stack(matricies)
-
-    return transition_matrix
-
-
 def polynomial_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
 
     transition_matrix: "numpy.ndarray" = factor * numpy.eye(dimension)
@@ -114,6 +99,22 @@ def autoregression_transition_matrix(
     identity_slice: "numpy.ndarray" = numpy.eye(dimension - 1, dimension)
 
     transition_matrix: "numpy.ndarray" = numpy.row_stack([data, identity_slice])
+
+    return transition_matrix
+
+
+def form_free_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
+
+    shape: "Tuple[int]" = (1, dimension)
+
+    data: "numpy.ndarray" = numpy.zeros(shape)
+
+    if dimension:
+        data[0, -1] = 1
+
+    transition_matrix: "numpy.ndarray" = factor * autoregression_transition_matrix(
+        dimension=dimension, data=data
+    )
 
     return transition_matrix
 
