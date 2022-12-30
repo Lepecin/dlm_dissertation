@@ -105,12 +105,10 @@ def autoregression_transition_matrix(
 
 def form_free_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
 
-    shape: "Tuple[int]" = (1, dimension)
-
-    data: "numpy.ndarray" = numpy.zeros(shape)
+    data: "numpy.ndarray" = numpy.zeros((dimension,))
 
     if dimension:
-        data[0, -1] = 1
+        data[-1] = 1
 
     transition_matrix: "numpy.ndarray" = factor * autoregression_transition_matrix(
         dimension=dimension, data=data
