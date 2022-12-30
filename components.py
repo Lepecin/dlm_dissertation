@@ -35,6 +35,32 @@ def array_slicer(
     return array
 
 
+def clean_int_list(int_list: "List[int]", start: "int", end: "int") -> "List[int]":
+
+    int_list: "List[int]" = list(set(int_list))
+
+    int_list.sort(key=(lambda x: x))
+
+    int_list = [_ for _ in int_list if _ in range(start, end)]
+
+    return int_list
+
+
+def covariate_matrix_generator(
+    dimension: "int", observation_matrix: "numpy.ndarray", indices: "List[int]"
+) -> "numpy.ndarray":
+
+    indices = clean_int_list(indices, 0, dimension)
+
+    template_matrix: "numpy.ndarray" = numpy.zeros((dimension, len(observation_matrix)))
+
+    template_matrix[
+        indices,
+    ] = observation_matrix
+
+    return template_matrix
+
+
 def basic_observation_matrix(dimension: "int") -> "numpy.ndarray":
 
     observation_matrix: "numpy.ndarray" = numpy.zeros((dimension,))
@@ -211,7 +237,7 @@ class ComponentFactory:
         )
 
         observation_matrix: "numpy.ndarray" = array_slicer(
-            array=data, start=start, amount=dimension
+            array=data, start=(start - dimension), amount=dimension
         )
 
         return ModelComponent(dimension, transition_matrix, observation_matrix)
