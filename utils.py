@@ -72,3 +72,12 @@ def random_nan(array: "numpy.ndarray", nans: "int") -> "numpy.ndarray":
     numpy.put(array, random_indices, numpy.nan)
 
     return array
+
+
+def clean_int_list(int_list: "List[int]") -> "List[int]":
+
+    int_list: "List[int]" = list(set(int_list))
+
+    int_list.sort(key=(lambda x: x))
+
+    return int_list
