@@ -1,12 +1,13 @@
-from objects import NormalModel, TransitionDensity, JointModel
-from typing import Union, Tuple
-from typing import Tuple, Union
+from objects import NormalModel, TransitionDensity, JointModel, InvWishart
+from typing import Union, Tuple, Optional
 import numpy
 from utils import symmetrise
 
 
 def transmutator(
-    model: "NormalModel", transition: "TransitionDensity", model_only: "bool" = False
+    model: "NormalModel",
+    transition: "TransitionDensity",
+    model_only: "bool" = False,
 ) -> "Union[Tuple[NormalModel, TransitionDensity], NormalModel]":
 
     # Extract parameters of model
@@ -34,10 +35,10 @@ def transmutator(
     # If output is not only model
     if not model_only:
 
+        inv_covariance_2 = numpy.linalg.inv(symmetrise(covariance_2))
+
         # Create parameters of new transition
-        weights_2: "numpy.ndarray" = covariance_1.dot(weights_1.T).dot(
-            numpy.linalg.inv(symmetrise(covariance_2))
-        )
+        weights_2: "numpy.ndarray" = covariance_1.dot(weights_1.T).dot(inv_covariance_2)
 
         bias_2: "numpy.ndarray" = mean_1 - weights_2.dot(mean_2)
 
@@ -52,7 +53,7 @@ def transmutator(
 
 
 def observator(
-    observation: "numpy.ndarray", transition: "TransitionDensity"
+    *, observation: "numpy.ndarray", transition: "TransitionDensity"
 ) -> "NormalModel":
 
     # Extract models of transition

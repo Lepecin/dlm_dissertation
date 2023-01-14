@@ -1,32 +1,31 @@
-from numpy import ndarray as Array
+from numpy import ndarray
 from dataclasses import dataclass
 
 
 @dataclass
 class NormalModel:
 
-    mean: "Array"
-    covariance: "Array"
+    mean: "ndarray"
+    covariance: "ndarray"
 
 
 @dataclass
-class TransitionDensity:
+class TransitionModel:
 
-    bias: "Array"
-    weights: "Array"
-    covariance: "Array"
+    bias: "ndarray"
+    weights: "ndarray"
+    covariance: "ndarray"
 
 
 @dataclass
 class JointModel:
 
-    basis: "NormalModel"
-    derived: "NormalModel"
-    covariance: "Array"
+    normal: "NormalModel"
+    transition: "TransitionModel"
 
 
 @dataclass
 class InvWishart:
 
-    scale: "Array"
+    scale: "ndarray"
     shape: "int"

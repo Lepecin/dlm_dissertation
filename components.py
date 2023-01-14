@@ -6,57 +6,71 @@ from typing import Tuple, List
 from dataclasses import dataclass
 
 
-def array_slicer(
-    array: "numpy.ndarray", start: "int", amount: "int"
-) -> "numpy.ndarray":
+def array_slicer(array: "List[float]", start: "int", amount: "int") -> "List[float]":
+    """Slice a Python list given a starting index and
+    amount of objects to return after the index."""
 
+    # Get length of array
     length: "int" = len(array)
 
+    # Get end of array
     end: "int" = start + amount
 
+    # Get left bound of array
     left_bound: "int" = max(min(start, length), 0)
 
+    # Get right bound of array
     right_bound: "int" = min(max(end, 0), length)
 
+    # Get length of left zeros
     left_length: "int" = min(end, 0) - min(start, 0)
 
+    # Get length of right zeros
     right_length: "int" = max(end, length) - max(start, length)
 
+    # Get final array
     array = array[left_bound:right_bound]
 
+    # If start is below zero
     if start < 0:
 
-        array = numpy.concatenate([numpy.zeros(left_length), array])
+        # Add correct number of zeros to left
+        array = left_length * [0.0] + array
 
+    # If end is greater than length
     if length < end:
 
-        array = numpy.concatenate([array, numpy.zeros(right_length)])
+        # Add correct number of zeros to right
+        array = array + right_length * [0.0]
 
     return array
 
 
 def clean_int_list(int_list: "List[int]", start: "int", end: "int") -> "List[int]":
 
+    # Remove repeats in integer list
     int_list: "List[int]" = list(set(int_list))
 
+    # Sort integer by size
     int_list.sort(key=(lambda x: x))
 
+    # Filter out integers that don't lie in range(start, end)
     int_list = [_ for _ in int_list if _ in range(start, end)]
 
     return int_list
 
 
 def covariate_matrix_generator(
-    dimension: "int", observation_matrix: "numpy.ndarray", indices: "List[int]"
+    dimension: "int", observation_array: "numpy.ndarray", indices: "List[int]" = []
 ) -> "numpy.ndarray":
 
     indices = clean_int_list(indices, 0, dimension)
 
-    template_matrix: "numpy.ndarray" = numpy.zeros((dimension, len(observation_matrix)))
+    template_matrix: "numpy.ndarray" = numpy.zeros((dimension, len(observation_array)))
 
     template_matrix[
         indices,
-    ] = observation_matrix
+    ] = observation_array
 
     return template_matrix
 
@@ -228,16 +242,14 @@ class ComponentFactory:
         return ModelComponent(2 * amount, transition_matrix, observation_matrix)
 
     @staticmethod
-    def create_regression(
-        dimension: "int", data: "numpy.ndarray", start: "int"
-    ) -> "ModelComponent":
+    def create_regression(dimension: "int", data: "numpy.ndarray") -> "ModelComponent":
 
         transition_matrix: "numpy.ndarray" = basic_transition_matrix(
             dimension=dimension
         )
 
         observation_matrix: "numpy.ndarray" = array_slicer(
-            array=data, start=(start - dimension), amount=dimension
+            array=data, start=0, amount=dimension
         )
 
         return ModelComponent(dimension, transition_matrix, observation_matrix)

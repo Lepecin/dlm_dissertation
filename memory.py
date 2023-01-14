@@ -60,4 +60,4 @@ class PrimeMemoryDLM:
 
     # -- Data
 
-    observations: "List[numpy.ndarray]"
+    observations: "numpy.ndarray"
