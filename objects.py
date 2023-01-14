@@ -25,9 +25,9 @@ class TransitionModel:
     def observe(self, observation: "ndarray"):
 
         # Extract models of transition
-        B = self.transition.bias
-        A = self.transition.weights
-        V = self.transition.covariance
+        B = self.bias
+        A = self.weights
+        V = self.covariance
 
         # Create new mean from observation
         mean = B + A.dot(observation)
@@ -59,7 +59,7 @@ class JointModel:
     def trans_mutator(
         self,
     ):
-        normal = self.normal_transmutator()
+        normal = self.norm_mutator()
         M = self.normal.mean
         S = self.normal.covariance
         A = self.transition.weights
