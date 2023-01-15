@@ -125,24 +125,25 @@ class ModelComponent:
     observation: "numpy.ndarray"
 
     def covariate(self, dimension, indices=[]):
-        # Clean list of indices
-        indices = clean_int_list(indices, 0, dimension)
         # Create template matrix onto which obs vector is grafted
         template = numpy.zeros((dimension, self.dimension))
-        # Graft obs vector to template
-        template[
-            indices,
-        ] = self.observation
+        if len(indices) > 0:
+            # Clean list of indices
+            indices = clean_int_list(indices, 0, dimension)
+            # Graft obs vector to template
+            template[
+                indices,
+            ] = self.observation
 
         return template
 
 
 class ComponentFactory:
-    def root(self):
+    def root(self, dimension):
         transition = basic_transition(0)
         observation = basic_observation(0)
 
-        return ModelComponent(0, transition, observation)
+        return ModelComponent(dimension, transition, observation)
 
     def form_free(self, dimension, factor=1):
         transition = form_free_transition(dimension, factor)
