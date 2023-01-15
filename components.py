@@ -1,270 +1,179 @@
 import math
 import numpy
-
 from scipy.linalg import block_diag
-from typing import Tuple, List
 from dataclasses import dataclass
 
 
-def array_slicer(array: "List[float]", start: "int", amount: "int") -> "List[float]":
-    """Slice a Python list given a starting index and
+def array_slicer(array, start, amount):
+    """Slice an array given a starting index and
     amount of objects to return after the index."""
 
-    # Get length of array
-    length: "int" = len(array)
+    # Derive necessary constants
+    length = len(array)
+    end = start + amount
+    left_bound = max(min(start, length), 0)
+    right_bound = min(max(end, 0), length)
+    left_length = min(end, 0) - min(start, 0)
+    right_length = max(end, length) - max(start, length)
 
-    # Get end of array
-    end: "int" = start + amount
-
-    # Get left bound of array
-    left_bound: "int" = max(min(start, length), 0)
-
-    # Get right bound of array
-    right_bound: "int" = min(max(end, 0), length)
-
-    # Get length of left zeros
-    left_length: "int" = min(end, 0) - min(start, 0)
-
-    # Get length of right zeros
-    right_length: "int" = max(end, length) - max(start, length)
-
-    # Get final array
+    # Create array
     array = array[left_bound:right_bound]
-
-    # If start is below zero
     if start < 0:
-
-        # Add correct number of zeros to left
-        array = left_length * [0.0] + array
-
-    # If end is greater than length
+        array = numpy.concatenate(numpy.zeros((left_length,)), array)
     if length < end:
-
-        # Add correct number of zeros to right
-        array = array + right_length * [0.0]
+        array = numpy.concatenate(array, numpy.zeros((left_length,)))
 
     return array
 
 
-def clean_int_list(int_list: "List[int]", start: "int", end: "int") -> "List[int]":
-
+def clean_int_list(int_list, start, end):
     # Remove repeats in integer list
-    int_list: "List[int]" = list(set(int_list))
-
+    int_list = list(set(int_list))
     # Sort integer by size
     int_list.sort(key=(lambda x: x))
-
     # Filter out integers that don't lie in range(start, end)
     int_list = [_ for _ in int_list if _ in range(start, end)]
 
     return int_list
 
 
-def covariate_matrix_generator(
-    dimension: "int", observation_array: "numpy.ndarray", indices: "List[int]" = []
-) -> "numpy.ndarray":
+def basic_observation(dimension):
+    # Make zero vector
+    observation = numpy.zeros((dimension,))
+    # If dimension non-zero, set first element to one
+    if dimension > 0:
+        observation[0] = 1
 
-    indices = clean_int_list(indices, 0, dimension)
-
-    template_matrix: "numpy.ndarray" = numpy.zeros((dimension, len(observation_array)))
-
-    template_matrix[
-        indices,
-    ] = observation_array
-
-    return template_matrix
+    return observation
 
 
-def basic_observation_matrix(dimension: "int") -> "numpy.ndarray":
+def harmonics_observation(amount):
+    # Create the observation matrix to replicate
+    vector = basic_observation(2)
+    # Create list of matrix template
+    vectors = amount * [vector]
+    # Concatenate vectors together
+    observation = numpy.concatenate(vectors)
 
-    observation_matrix: "numpy.ndarray" = numpy.zeros((dimension,))
-
-    if dimension:
-        observation_matrix[0] = 1
-
-    return observation_matrix
-
-
-def compound_observation_matrix(dimension: "int", amount: "int") -> "numpy.ndarray":
-
-    matrix_template: "numpy.ndarray" = basic_observation_matrix(dimension=dimension)
-
-    matricies: "List[numpy.ndarray]" = amount * [matrix_template]
-
-    observation_matrix: "numpy.ndarray" = numpy.concatenate(matricies)
-
-    return observation_matrix
+    return observation
 
 
-def basic_transition_matrix(dimension: "int") -> "numpy.ndarray":
+def basic_transition(dimension):
 
-    shape: "Tuple[int]" = (dimension, dimension)
-
-    transition_matrix: "numpy.ndarray" = numpy.eye(*shape)
-
-    return transition_matrix
+    return numpy.eye(dimension, dimension)
 
 
-def polynomial_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
+def polynomial_transition(dimension, factor=1):
+    # Create scaled identity
+    transition = factor * numpy.eye(dimension)
+    # Create shifted diagonal matrix
+    top = numpy.eye(dimension)[1:dimension]
+    bottom = numpy.zeros((1, dimension))
+    shifted = numpy.row_stack([top, bottom])
+    # Add matricies together
+    transition = transition + shifted
 
-    transition_matrix: "numpy.ndarray" = factor * numpy.eye(dimension)
-
-    top_matrix: "numpy.ndarray" = numpy.eye(dimension)[1:dimension]
-
-    shape: "Tuple[int]" = (1, dimension)
-
-    bottom_matrix: "numpy.ndarray" = numpy.zeros(shape)
-
-    matricies: "List[numpy.ndarray]" = [top_matrix, bottom_matrix]
-
-    transition_matrix = transition_matrix + numpy.row_stack(matricies)
-
-    return transition_matrix
+    return transition
 
 
-def harmonic_transition_matrix(period: "int", factor: "float") -> "numpy.ndarray":
-
-    frequency: "float" = 2 * math.pi / period
-
-    cosine: "float" = math.cos(frequency)
-
-    sine: "float" = math.sin(frequency)
-
-    transition_matrix: "numpy.ndarray" = factor * numpy.array(
+def harmonic_transition(period, factor=1):
+    # Create sine and cosine
+    frequency = 2 * math.pi / period
+    cosine = math.cos(frequency)
+    sine = math.sin(frequency)
+    # Create 2d rotation matrix (harmonic matrix)
+    transition = factor * numpy.array(
         [
             [cosine, sine],
             [-sine, cosine],
         ]
     )
 
-    return transition_matrix
+    return transition
 
 
-def harmonics_transition_matrix(
-    start: "int", amount: "int", factor: "float"
-) -> "numpy.ndarray":
+def harmonics_transition(start, amount, factor=1):
+    # Create index + 1 of last harmonic
+    end = start + amount
+    # Create list of harmonics
+    harmonics = [harmonic_transition(period, factor) for period in range(start, end)]
+    # Join harmonics into one harmonic matrix
+    transition = block_diag(*harmonics)
 
-    end: "int" = start + amount
-
-    matricies: "List[numpy.ndarray]" = [
-        harmonic_transition_matrix(_, factor) for _ in range(start, end)
-    ]
-
-    transition_matrix: "numpy.ndarray" = block_diag(*matricies)
-
-    return transition_matrix
+    return transition
 
 
-def autoregression_transition_matrix(
-    dimension: "int", data: "numpy.ndarray"
-) -> "numpy.ndarray":
+def autoregression_transition(dimension, data):
+    # Create form free matrix
+    transition = form_free_transition(dimension)
+    # Inject data into form free
+    transition[0] = data
 
-    data: "numpy.ndarray" = numpy.expand_dims(data, axis=0)
-
-    identity_slice: "numpy.ndarray" = numpy.eye(dimension - 1, dimension)
-
-    transition_matrix: "numpy.ndarray" = numpy.row_stack([data, identity_slice])
-
-    return transition_matrix
+    return transition
 
 
-def form_free_transition_matrix(dimension: "int", factor: "float") -> "numpy.ndarray":
+def form_free_transition(dimension, factor=1):
 
-    data: "numpy.ndarray" = numpy.zeros((dimension,))
-
-    if dimension:
-        data[-1] = 1
-
-    transition_matrix: "numpy.ndarray" = factor * autoregression_transition_matrix(
-        dimension=dimension, data=data
-    )
-
-    return transition_matrix
+    return factor * numpy.roll(numpy.eye(dimension), shift=-1, axis=1)
 
 
 @dataclass
 class ModelComponent:
 
     dimension: "int"
-    transition_matrix: "numpy.ndarray"
-    observation_matrix: "numpy.ndarray"
+    transition: "numpy.ndarray"
+    observation: "numpy.ndarray"
+
+    def covariate(self, dimension, indices=[]):
+        # Clean list of indices
+        indices = clean_int_list(indices, 0, dimension)
+        # Create template matrix onto which obs vector is grafted
+        template = numpy.zeros((dimension, self.dimension))
+        # Graft obs vector to template
+        template[
+            indices,
+        ] = self.observation
+
+        return template
 
 
 class ComponentFactory:
-    @staticmethod
-    def create_root(dimension: "int") -> "ModelComponent":
+    def root(self):
+        transition = basic_transition(0)
+        observation = basic_observation(0)
 
-        transition_matrix: "numpy.ndarray" = basic_transition_matrix(dimension=0)
+        return ModelComponent(0, transition, observation)
 
-        observation_matrix: "numpy.ndarray" = basic_observation_matrix(dimension=0)
+    def form_free(self, dimension, factor=1):
+        transition = form_free_transition(dimension, factor)
+        observation = basic_observation(dimension)
 
-        return ModelComponent(dimension, transition_matrix, observation_matrix)
+        return ModelComponent(dimension, transition, observation)
 
-    @staticmethod
-    def create_form_free(dimension: "int", factor: "float" = 1) -> "ModelComponent":
+    def polynomial(self, dimension, factor=1):
+        transition = polynomial_transition(dimension, factor)
+        observation = basic_observation(dimension)
 
-        transition_matrix: "numpy.ndarray" = form_free_transition_matrix(
-            dimension=dimension, factor=factor
-        )
+        return ModelComponent(dimension, transition, observation)
 
-        observation_matrix: "numpy.ndarray" = basic_observation_matrix(
-            dimension=dimension
-        )
+    def harmonics(self, start, amount, factor=1):
+        transition = harmonics_transition(start, amount, factor)
+        observation = harmonics_observation(amount)
 
-        return ModelComponent(dimension, transition_matrix, observation_matrix)
+        return ModelComponent(2 * amount, transition, observation)
 
-    @staticmethod
-    def create_polynomial(dimension: "int", factor: "float" = 1) -> "ModelComponent":
+    def regression(self, dimension, data):
+        transition = basic_transition(dimension)
+        observation = array_slicer(data, 0, dimension)
 
-        transition_matrix: "numpy.ndarray" = polynomial_transition_matrix(
-            dimension=dimension, factor=factor
-        )
+        return ModelComponent(dimension, transition, observation)
 
-        observation_matrix: "numpy.ndarray" = basic_observation_matrix(
-            dimension=dimension
-        )
+    def autoregression(self, dimension, data):
+        transition = autoregression_transition(dimension, data)
+        observation = basic_observation(dimension)
 
-        return ModelComponent(dimension, transition_matrix, observation_matrix)
+        return ModelComponent(dimension, transition, observation)
 
-    @staticmethod
-    def create_harmonics(
-        start: "int", amount: "int", factor: "float" = 1
-    ) -> "ModelComponent":
 
-        transition_matrix: "numpy.ndarray" = harmonics_transition_matrix(
-            start=start, amount=amount, factor=factor
-        )
-
-        observation_matrix: "numpy.ndarray" = compound_observation_matrix(
-            dimension=2, amount=amount
-        )
-
-        return ModelComponent(2 * amount, transition_matrix, observation_matrix)
-
-    @staticmethod
-    def create_regression(dimension: "int", data: "numpy.ndarray") -> "ModelComponent":
-
-        transition_matrix: "numpy.ndarray" = basic_transition_matrix(
-            dimension=dimension
-        )
-
-        observation_matrix: "numpy.ndarray" = array_slicer(
-            array=data, start=0, amount=dimension
-        )
-
-        return ModelComponent(dimension, transition_matrix, observation_matrix)
-
-    @staticmethod
-    def create_autoregression(
-        dimension: "int", data: "numpy.ndarray"
-    ) -> "ModelComponent":
-
-        transition_matrix: "numpy.ndarray" = autoregression_transition_matrix(
-            dimension=dimension, data=data
-        )
-
-        observation_matrix: "numpy.ndarray" = basic_observation_matrix(
-            dimension=dimension
-        )
-
-        return ModelComponent(dimension, transition_matrix, observation_matrix)
+if __name__ == "__main__":
+    print(ComponentFactory().regression(5, numpy.array([1, 2, 3, 4, 2, 5])).observation)
