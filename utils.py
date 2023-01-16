@@ -19,11 +19,6 @@ def rand_nnd(dim: "int", shape: "int") -> "Array":
     return a.dot(a.T)
 
 
-def symmetrise(array: "Array") -> "Array":
-
-    return (array + array.T) / 2
-
-
 def relister(l: "list") -> "list":
 
     return [l[-1 - i] for i in range(len(l))]
