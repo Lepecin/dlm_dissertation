@@ -41,9 +41,8 @@ class JointModel:
     normal: "NormalModel"
     transition: "TransitionModel"
 
-    def norm_mutator(
-        self,
-    ):
+    def mutate_normal(self):
+
         M = self.normal.mean
         S = self.normal.covariance
         B = self.transition.bias
@@ -56,10 +55,9 @@ class JointModel:
 
         return NormalModel(mean, covariance)
 
-    def trans_mutator(
-        self,
-    ):
-        normal = self.norm_mutator()
+    def mutate_joint_model(self):
+
+        normal = self.mutate_normal()
         M = self.normal.mean
         S = self.normal.covariance
         A = self.transition.weights
