@@ -1,6 +1,7 @@
 import numpy
 from numpy import ndarray
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Optional
 
 
 def symmetrise(array: "ndarray"):
@@ -13,6 +14,24 @@ class NormalModel:
 
     mean: "ndarray"
     covariance: "ndarray"
+    inv_covariance: "Optional[ndarray]" = field(default=None, init=False)
+
+    def invert_covariance(self):
+
+        if self.inv_covariance is None:
+            self.inv_covariance = numpy.linalg.inv(symmetrise(self.covariance))
+
+        return self.inv_covariance
+
+    def update_wishart(self, wishart: "InvWishart", observation: "ndarray"):
+
+        error = self.mean - observation
+        inv_covariance = self.invert_covariance()
+        scale = wishart.scale + (error.T).dot(inv_covariance).dot(error)
+
+        shape = wishart.shape + self.mean.shape[0]
+
+        return InvWishart(scale, shape)
 
 
 @dataclass
@@ -62,8 +81,7 @@ class JointModel:
         S = self.normal.covariance
         A = self.transition.weights
 
-        # Create parameters of new transition
-        inv_covariance = numpy.linalg.inv(symmetrise(normal.covariance))
+        inv_covariance = normal.invert_covariance()
         weights: "ndarray" = S.dot(A.T).dot(inv_covariance)
         bias: "ndarray" = M - weights.dot(normal.mean)
         variation: "ndarray" = S - weights.dot(normal.covariance).dot(weights.T)
