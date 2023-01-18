@@ -1,8 +1,17 @@
 import pandas
 from typing import List
+import pathlib
 
 
-def weather_dataframe(csv_path: "str") -> "pandas.DataFrame":
+def default_path():
+
+    path = pathlib.Path(__file__)
+    path = path.parent / "data/weather_data.csv"
+
+    return path.__str__()
+
+
+def weather_dataframe(csv_path: "str" = default_path()) -> "pandas.DataFrame":
 
     # Load dataset as pandas DataFrame
     dataset: "pandas.DataFrame" = pandas.read_csv(csv_path)
@@ -35,3 +44,8 @@ def weather_dataframe(csv_path: "str") -> "pandas.DataFrame":
     dataset = dataset.iloc[1:]
 
     return dataset
+
+
+if __name__ == "__main__":
+
+    print(default_path())
