@@ -1,4 +1,4 @@
-from objects import NormalModel, TransitionModel, JointModel
+from objects import NormalModel, TransitionModel, JointModel, InvWishart
 from typing import List
 from dataclasses import dataclass, field
 from numpy import ndarray
@@ -22,6 +22,9 @@ class MemoryDLM:
     # -- Transitions
     smoothers: "List[TransitionModel]" = field(default_factory=list)
     filterers: "List[TransitionModel]" = field(default_factory=list)
+
+    # -- Error Matrix
+    wisharts: "List[InvWishart]" = field(default_factory=list)
 
     def evolve(self, time: "int", evolver: "TransitionModel"):
 
@@ -114,6 +117,7 @@ class PrimeMemoryDLM:
 
     # -- Models
     primordial_model: "NormalModel"
+    primordial_error: "InvWishart"
 
     # -- Transitions
     evolvers: "List[TransitionModel]" = field(default_factory=list)
