@@ -5,11 +5,13 @@ def forward(prime_memory: "PrimeMemoryDLM", memory: "MemoryDLM") -> "MemoryDLM":
 
     forward_period = prime_memory.forward_period
     primordial_model = prime_memory.primordial_model
+    primordial_error = prime_memory.primordial_error
     evolvers = prime_memory.evolvers
     observers = prime_memory.observers
     observations = prime_memory.observations
 
     memory.filtered_states.append(primordial_model)
+    memory.wisharts.append(primordial_error)
 
     for time in range(forward_period):
 

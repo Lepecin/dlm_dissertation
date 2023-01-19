@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from numpy import ndarray
 
 
-@dataclass
+@dataclass(repr=False)
 class MemoryDLM:
 
     # -- Space Models
@@ -52,11 +52,15 @@ class MemoryDLM:
 
     def filter(self, time: "int", observation: "ndarray"):
 
+        evolved_space = self.evolved_spaces[time]
         filterer: "TransitionModel" = self.filterers[time]
+        error: "InvWishart" = self.wisharts[time]
 
         filtered_state = filterer.observe(observation)
+        error = evolved_space.update_wishart(error, observation)
 
         self.filtered_states.append(filtered_state)
+        self.wisharts.append(error)
 
     def observe_filtered(self, time: "int", observer: "TransitionModel"):
 
@@ -105,7 +109,7 @@ class MemoryDLM:
         self.predicted_spaces.append(predicted_space)
 
 
-@dataclass
+@dataclass(repr=False)
 class PrimeMemoryDLM:
 
     # -- Periods
