@@ -25,11 +25,11 @@ class NormalModel:
 
     def update_wishart(self, wishart: "InvWishart", observation: "ndarray"):
 
-        error = self.mean - observation
-        inv_covariance = self.invert_covariance()
-        scale = wishart.scale + (error.T).dot(inv_covariance).dot(error)
+        error = self.mean - observation  # (P, N)
+        inv_covariance = self.invert_covariance()  # (P, P)
+        scale = wishart.scale + (error.T).dot(inv_covariance).dot(error)  # (N, N)
 
-        shape = wishart.shape + self.mean.shape[0]
+        shape = wishart.shape + self.mean.shape[0]  # int
 
         return InvWishart(scale, shape)
 
@@ -60,6 +60,12 @@ class JointModel:
     normal: "NormalModel"
     transition: "TransitionModel"
 
+    def give_normal(self):
+        return self.normal
+
+    def give_transition(self):
+        return self.transition
+
     def mutate_normal(self):
 
         M = self.normal.mean
@@ -85,6 +91,7 @@ class JointModel:
         weights: "ndarray" = S.dot(A.T).dot(inv_covariance)
         bias: "ndarray" = M - weights.dot(normal.mean)
         variation: "ndarray" = S - weights.dot(normal.covariance).dot(weights.T)
+
         transition = TransitionModel(bias, weights, variation)
 
         return JointModel(normal, transition)
