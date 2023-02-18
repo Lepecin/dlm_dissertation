@@ -1,5 +1,5 @@
 from numpy import ndarray
-from typing import List, Any
+from typing import List, Any, Tuple
 from objects import NormalModel, TransitionModel, JointModel, InvWishartModel
 
 
@@ -72,6 +72,28 @@ class MemoryDLM:
         self.wisharts = ModelContainer(0, S)
 
 
+def transition_transumer(
+    model: "NormalModel", transition: "TransitionModel"
+) -> "Tuple[NormalModel, TransitionModel]":
+
+    joint_model = JointModel(model, transition)
+    joint_model = joint_model.mutate_joint_model()
+    model = joint_model.give_normal()
+    transition = joint_model.give_transition()
+
+    return model, transition
+
+
+def model_transmuter(
+    model: "NormalModel", transition: "TransitionModel"
+) -> "NormalModel":
+
+    joint_model = JointModel(model, transition)
+    model = joint_model.mutate_normal()
+
+    return model
+
+
 class UpdaterDLM(MemoryDLM):
     def __init__(self, observed_period: "int", predicted_period: "int"):
         super().__init__(observed_period, predicted_period)
@@ -80,10 +102,7 @@ class UpdaterDLM(MemoryDLM):
 
         filtered_state = self.filtered_states.get_from_time(time)
 
-        joint_model = JointModel(filtered_state, evolver)
-        joint_model = joint_model.mutate_joint_model()
-        smoother = joint_model.give_transition()
-        evolved_state = joint_model.give_normal()
+        evolved_state, smoother = transition_transumer(filtered_state, evolver)
 
         self.smoothers.set_at_time(time + 1, smoother)
         self.evolved_states.set_at_time(time + 1, evolved_state)
@@ -92,10 +111,7 @@ class UpdaterDLM(MemoryDLM):
 
         evolved_state = self.evolved_states.get_from_time(time + 1)
 
-        joint_model = JointModel(evolved_state, observer)
-        joint_model = joint_model.mutate_joint_model()
-        filterer = joint_model.give_transition()
-        evolved_space = joint_model.give_normal()
+        evolved_space, filterer = transition_transumer(evolved_state, observer)
 
         self.filterers.set_at_time(time + 1, filterer)
         self.evolved_spaces.set_at_time(time + 1, evolved_space)
@@ -116,8 +132,7 @@ class UpdaterDLM(MemoryDLM):
 
         filtered_state = self.filtered_states.get_from_time(time + 1)
 
-        joint_model = JointModel(filtered_state, observer)
-        filtered_space = joint_model.mutate_normal()
+        filtered_space = model_transmuter(filtered_state, observer)
 
         self.filtered_spaces.set_at_time(time + 1, filtered_space)
 
@@ -126,8 +141,7 @@ class UpdaterDLM(MemoryDLM):
         smoother = self.smoothers.get_from_time(self.S - time)
         smoothed_state = self.smoothed_states.get_from_time(self.S - time)
 
-        joint_model = JointModel(smoothed_state, smoother)
-        smoothed_state = joint_model.mutate_normal()
+        smoothed_state = model_transmuter(smoothed_state, smoother)
 
         self.smoothed_states.set_at_time(self.S - time - 1, smoothed_state)
 
@@ -135,8 +149,7 @@ class UpdaterDLM(MemoryDLM):
 
         smoothed_state = self.smoothed_states.get_from_time(self.S - time)
 
-        joint_model = JointModel(smoothed_state, observer)
-        smoothed_space = joint_model.mutate_normal()
+        smoothed_space = model_transmuter(smoothed_state, observer)
 
         self.smoothed_spaces.set_at_time(self.S - time, smoothed_space)
 
@@ -144,8 +157,7 @@ class UpdaterDLM(MemoryDLM):
 
         predicted_state = self.predicted_states.get_from_time(self.S + time)
 
-        joint_model = JointModel(predicted_state, evolver)
-        predicted_state = joint_model.mutate_normal()
+        predicted_state = model_transmuter(predicted_state, evolver)
 
         self.predicted_states.set_at_time(self.S + time + 1, predicted_state)
 
@@ -153,7 +165,6 @@ class UpdaterDLM(MemoryDLM):
 
         predicted_state = self.predicted_states.get_from_time(self.S + time + 1)
 
-        joint_model = JointModel(predicted_state, observer)
-        predicted_space = joint_model.mutate_normal()
+        predicted_space = model_transmuter(predicted_state, observer)
 
         self.predicted_spaces.set_at_time(self.S + time + 1, predicted_space)
