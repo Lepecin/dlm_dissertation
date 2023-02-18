@@ -21,7 +21,7 @@ def array_slicer(array, start, amount):
     if start < 0:
         array = numpy.concatenate(numpy.zeros((left_length,)), array)
     if length < end:
-        array = numpy.concatenate(array, numpy.zeros((left_length,)))
+        array = numpy.concatenate(array, numpy.zeros((right_length,)))
 
     return array
 
