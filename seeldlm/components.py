@@ -1,7 +1,9 @@
 import math
 import numpy
-from typing import List
+
 from scipy.linalg import block_diag
+from typing import List, Dict, Tuple
+from itertools import permutations
 
 
 def array_slicer(
@@ -45,7 +47,7 @@ class ObservationFactory:
 
     def harmonics(self, amount: "int") -> "numpy.ndarray":
 
-        vector = self.basic_observation(2)
+        vector = self.basic(2)
         vectors = amount * [vector]
         observation = numpy.concatenate(vectors)
 
@@ -68,7 +70,7 @@ class TransitionFactory:
 
         shifted = self.form_free(dimension)
         if dimension > 0:
-            shifted[dimension, 0] = 0
+            shifted[dimension - 1, 0] = 0
 
         transition += shifted
 
@@ -190,5 +192,37 @@ class ComponentFactory:
         )
 
 
-if __name__ == "__main__":
-    print(numpy.roll(numpy.eye(5), 1, 1))
+def model_compiler(
+    root_dimension: "int",
+    components: "List[ModelComponent]",
+    vertices: "Dict[Tuple[int, int], List[int]]",
+) -> "Tuple[numpy.ndarray, numpy.ndarray]":
+
+    amount = len(components)
+
+    transition_block = amount * [amount * [None]]
+    observation_block = amount * [None]
+
+    for index in range(amount):
+
+        if not (-1, index) in vertices:
+            indices = []
+        else:
+            indices = vertices[(-1, index)]
+
+        transition_block[index][index] = components[index].transition
+        observation_block[index] = components[index].covariate(root_dimension, indices)
+
+    for index in permutations(range(amount), 2):
+
+        if not index in vertices:
+            indices = []
+        else:
+            indices = vertices[index]
+
+        x, y = index
+        transition_block[x][y] = components[y].covariate(
+            components[x].dimension, indices
+        )
+
+    return numpy.block(transition_block), numpy.block(observation_block)
