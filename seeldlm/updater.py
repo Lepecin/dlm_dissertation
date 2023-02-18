@@ -1,8 +1,8 @@
 from typing import Tuple
 from numpy import ndarray
 
-from objects import NormalModel, TransitionModel, JointModel, InvWishartModel
-from memory import MemoryDLM
+from .objects import NormalModel, TransitionModel, JointModel, InvWishartModel
+from .memory import MemoryDLM
 
 
 def transition_transumer(

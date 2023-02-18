@@ -1,5 +1,5 @@
-from memory import PrimeMemoryDLM
-from updater import UpdaterDLM
+from .memory import PrimeMemoryDLM
+from .updater import UpdaterDLM
 
 
 class ModellerDLM:

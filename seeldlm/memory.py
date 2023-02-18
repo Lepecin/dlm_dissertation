@@ -1,6 +1,7 @@
 from numpy import ndarray
 from typing import List, Any
-from objects import NormalModel, InvWishartModel
+
+from .objects import NormalModel, InvWishartModel
 
 
 class ModelContainer:
