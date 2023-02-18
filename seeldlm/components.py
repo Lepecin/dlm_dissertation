@@ -8,8 +8,6 @@ from typing import List
 def array_slicer(
     array: "numpy.ndarray", start: "int", amount: "int"
 ) -> "numpy.ndarray":
-    """Slice an array given a starting index and
-    amount of objects to return after the index."""
 
     output = numpy.zeros((amount,))
 
@@ -143,41 +141,51 @@ class ModelComponent:
 
 
 class ComponentFactory:
-    def root(self, dimension):
-        transition = basic_transition(0)
-        observation = basic_observation(0)
+    def __init__(self):
 
-        return ModelComponent(dimension, transition, observation)
+        self.transition_factory = TransitionFactory()
+        self.observation_factory = ObservationFactory()
 
-    def form_free(self, dimension, factor=1):
-        transition = form_free_transition(dimension, factor)
-        observation = basic_observation(dimension)
+    def form_free(self, dimension: "int", factor: "float" = 1) -> "ModelComponent":
+        return ModelComponent(
+            dimension,
+            self.transition_factory.form_free(dimension, factor),
+            self.observation_factory.basic(dimension),
+        )
 
-        return ModelComponent(dimension, transition, observation)
+    def polynomial(self, dimension: "int", factor: "float" = 1) -> "ModelComponent":
+        return ModelComponent(
+            dimension,
+            self.transition_factory.polynomial(dimension, factor),
+            self.observation_factory.basic(dimension),
+        )
 
-    def polynomial(self, dimension, factor=1):
-        transition = polynomial_transition(dimension, factor)
-        observation = basic_observation(dimension)
+    def harmonics(
+        self, start: "int", amount: "int", factor: "float" = 1
+    ) -> "ModelComponent":
+        return ModelComponent(
+            2 * amount,
+            self.transition_factory.harmonics(start, amount, factor),
+            self.observation_factory.harmonics(amount),
+        )
 
-        return ModelComponent(dimension, transition, observation)
+    def regression(
+        self, start: "int", amount: "int", data: "numpy.ndarray"
+    ) -> "ModelComponent":
+        return ModelComponent(
+            amount,
+            self.transition_factory.basic(amount),
+            array_slicer(data, start, amount),
+        )
 
-    def harmonics(self, start, amount, factor=1):
-        transition = harmonics_transition(start, amount, factor)
-        observation = harmonics_observation(amount)
-
-        return ModelComponent(2 * amount, transition, observation)
-
-    def regression(self, dimension, data):
-        transition = basic_transition(dimension)
-        observation = array_slicer(data, 0, dimension)
-
-        return ModelComponent(dimension, transition, observation)
-
-    def autoregression(self, dimension, data):
-        transition = autoregression_transition(dimension, data)
-        observation = basic_observation(dimension)
-
-        return ModelComponent(dimension, transition, observation)
+    def autoregression(
+        self, dimension: "int", data: "numpy.ndarray"
+    ) -> "ModelComponent":
+        return ModelComponent(
+            dimension,
+            self.transition_factory.autoregression(dimension, data),
+            self.observation_factory.basic(dimension),
+        )
 
 
 if __name__ == "__main__":
