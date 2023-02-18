@@ -1,8 +1,7 @@
 import math
 import numpy
-from scipy.linalg import block_diag
-from dataclasses import dataclass
 from typing import List
+from scipy.linalg import block_diag
 
 
 def array_slicer(
@@ -119,20 +118,23 @@ class TransitionFactory:
         return transition
 
 
-@dataclass
 class ModelComponent:
+    def __init__(
+        self,
+        dimension: "int",
+        transition: "numpy.ndarray",
+        observation: "numpy.ndarray",
+    ):
+        self.dimension = dimension
+        self.transition = transition
+        self.observation = observation
 
-    dimension: "int"
-    transition: "numpy.ndarray"
-    observation: "numpy.ndarray"
+    def covariate(self, dimension: "int", indices: "List[int]" = []) -> "numpy.ndarray":
 
-    def covariate(self, dimension, indices=[]):
-        # Create template matrix onto which obs vector is grafted
         template = numpy.zeros((dimension, self.dimension))
+
         if len(indices) > 0:
-            # Clean list of indices
             indices = clean_int_list(indices, 0, dimension)
-            # Graft obs vector to template
             template[
                 indices,
             ] = self.observation
