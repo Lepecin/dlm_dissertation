@@ -1,24 +1,24 @@
-from memory import MemoryDLM, PrimeMemoryDLM
+from memory import UpdaterDLM, PrimeMemoryDLM
 
 
-def forward(prime_memory: "PrimeMemoryDLM", memory: "MemoryDLM") -> "MemoryDLM":
+def forward(prime_memory: "PrimeMemoryDLM", memory: "UpdaterDLM") -> "UpdaterDLM":
 
-    forward_period = prime_memory.forward_period
+    observed_period = prime_memory.S
     primordial_model = prime_memory.primordial_model
     primordial_error = prime_memory.primordial_error
     evolvers = prime_memory.evolvers
     observers = prime_memory.observers
     observations = prime_memory.observations
 
-    memory.filtered_states.append(primordial_model)
-    memory.wisharts.append(primordial_error)
+    memory.filtered_states.set_at_time(0, primordial_model)
+    memory.wisharts.set_at_time(0, primordial_error)
 
-    for time in range(forward_period):
+    for time in range(observed_period):
 
         observation = observations[time]
         observation = observation.reshape((-1, 1))
-        evolver = evolvers[0]
-        observer = observers[0]
+        evolver = evolvers.get_from_time(0)
+        observer = observers.get_from_time(0)
 
         memory.evolve(time, evolver)
         memory.observe_evolved(time, observer)
@@ -30,48 +30,42 @@ def forward(prime_memory: "PrimeMemoryDLM", memory: "MemoryDLM") -> "MemoryDLM":
 
 def backward(
     prime_memory: "PrimeMemoryDLM",
-    memory: "MemoryDLM",
-) -> "MemoryDLM":
+    memory: "UpdaterDLM",
+) -> "UpdaterDLM":
 
-    forward_period = prime_memory.forward_period
+    observed_period = prime_memory.S
     observers = prime_memory.observers
 
-    filtered_state = memory.filtered_states[forward_period]
-    memory.smoothed_states.append(filtered_state)
+    filtered_state = memory.filtered_states.get_from_time(observed_period)
+    memory.smoothed_states.set_at_time(observed_period, filtered_state)
 
-    for time in range(forward_period):
+    for time in range(observed_period):
 
-        observer = observers[0]
+        observer = observers.get_from_time(0)
 
         memory.observe_smoothed(time, observer)
         memory.smoothen(time)
-
-    def relister(l):
-        return [l[-1 - i] for i in range(len(l))]
-
-    memory.smoothed_states = relister(memory.smoothed_states)
-    memory.smoothed_spaces = relister(memory.smoothed_spaces)
 
     return memory
 
 
 def beyond(
     prime_memory: "PrimeMemoryDLM",
-    memory: "MemoryDLM",
-) -> "MemoryDLM":
+    memory: "UpdaterDLM",
+) -> "UpdaterDLM":
 
-    forward_period = prime_memory.forward_period
-    beyond_period = prime_memory.beyond_period
+    observed_period = prime_memory.S
+    predicted_period = prime_memory.P
     evolvers = prime_memory.evolvers
     observers = prime_memory.observers
 
-    filtered_state = memory.filtered_states[forward_period]
-    memory.predicted_states.append(filtered_state)
+    filtered_state = memory.filtered_states.get_from_time(observed_period)
+    memory.predicted_states.set_at_time(observed_period, filtered_state)
 
-    filtered_space = memory.filtered_spaces[forward_period - 1]
-    memory.predicted_spaces.append(filtered_space)
+    filtered_space = memory.filtered_spaces.get_from_time(observed_period)
+    memory.predicted_spaces.set_at_time(observed_period, filtered_space)
 
-    for time in range(beyond_period):
+    for time in range(predicted_period):
 
         evolver = evolvers[0]
         observer = observers[0]
