@@ -1,6 +1,6 @@
 from numpy import ndarray
-from typing import List, Any, Tuple
-from objects import NormalModel, TransitionModel, JointModel, InvWishartModel
+from typing import List, Any
+from objects import NormalModel, InvWishartModel
 
 
 class ModelContainer:
