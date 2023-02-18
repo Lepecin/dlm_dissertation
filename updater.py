@@ -33,7 +33,7 @@ class UpdaterDLM(MemoryDLM):
 
     def evolve(self, time: "int", evolver: "TransitionModel"):
 
-        filtered_state = self.filtered_states.get_from_time(time)
+        filtered_state: "NormalModel" = self.filtered_states.get_from_time(time)
 
         evolved_state, smoother = transition_transumer(filtered_state, evolver)
 
@@ -42,7 +42,7 @@ class UpdaterDLM(MemoryDLM):
 
     def observe_evolved(self, time: "int", observer: "TransitionModel"):
 
-        evolved_state = self.evolved_states.get_from_time(time + 1)
+        evolved_state: "NormalModel" = self.evolved_states.get_from_time(time + 1)
 
         evolved_space, filterer = transition_transumer(evolved_state, observer)
 
@@ -63,7 +63,7 @@ class UpdaterDLM(MemoryDLM):
 
     def observe_filtered(self, time: "int", observer: "TransitionModel"):
 
-        filtered_state = self.filtered_states.get_from_time(time + 1)
+        filtered_state: "NormalModel" = self.filtered_states.get_from_time(time + 1)
 
         filtered_space = model_transmuter(filtered_state, observer)
 
@@ -71,8 +71,10 @@ class UpdaterDLM(MemoryDLM):
 
     def smoothen(self, time: "int"):
 
-        smoother = self.smoothers.get_from_time(self.S - time)
-        smoothed_state = self.smoothed_states.get_from_time(self.S - time)
+        smoother: "TransitionModel" = self.smoothers.get_from_time(self.S - time)
+        smoothed_state: "NormalModel" = self.smoothed_states.get_from_time(
+            self.S - time
+        )
 
         smoothed_state = model_transmuter(smoothed_state, smoother)
 
@@ -80,7 +82,9 @@ class UpdaterDLM(MemoryDLM):
 
     def observe_smoothed(self, time: "int", observer: "TransitionModel"):
 
-        smoothed_state = self.smoothed_states.get_from_time(self.S - time)
+        smoothed_state: "NormalModel" = self.smoothed_states.get_from_time(
+            self.S - time
+        )
 
         smoothed_space = model_transmuter(smoothed_state, observer)
 
@@ -88,7 +92,9 @@ class UpdaterDLM(MemoryDLM):
 
     def predict(self, time: "int", evolver: "TransitionModel"):
 
-        predicted_state = self.predicted_states.get_from_time(self.S + time)
+        predicted_state: "NormalModel" = self.predicted_states.get_from_time(
+            self.S + time
+        )
 
         predicted_state = model_transmuter(predicted_state, evolver)
 
@@ -96,7 +102,9 @@ class UpdaterDLM(MemoryDLM):
 
     def observe_predicted(self, time: "int", observer: "TransitionModel"):
 
-        predicted_state = self.predicted_states.get_from_time(self.S + time + 1)
+        predicted_state: "NormalModel" = self.predicted_states.get_from_time(
+            self.S + time + 1
+        )
 
         predicted_space = model_transmuter(predicted_state, observer)
 
