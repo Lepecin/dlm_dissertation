@@ -35,7 +35,10 @@ def clean_int_list(int_list: "List[int]", start: "int", end: "int") -> "List[int
 
 
 class ObservationFactory:
-    def basic_observation(self, dimension: "int") -> "numpy.ndarray":
+    def __init__(self):
+        pass
+
+    def basic(self, dimension: "int") -> "numpy.ndarray":
 
         observation = numpy.zeros((dimension,))
         if dimension > 0:
@@ -43,7 +46,7 @@ class ObservationFactory:
 
         return observation
 
-    def harmonics_observation(self, amount: "int") -> "numpy.ndarray":
+    def harmonics(self, amount: "int") -> "numpy.ndarray":
 
         vector = self.basic_observation(2)
         vectors = amount * [vector]
@@ -53,28 +56,33 @@ class ObservationFactory:
 
 
 class TransitionFactory:
-    def basic_transition(dimension):
+    def __init__(self):
+        pass
 
-        return numpy.eye(dimension, dimension)
+    def basic(self, dimension: "int", factor: "float" = 1) -> "numpy.ndarray":
 
-    def polynomial_transition(dimension, factor=1):
-        # Create scaled identity
-        transition = factor * numpy.eye(dimension)
-        # Create shifted diagonal matrix
-        top = numpy.eye(dimension)[1:dimension]
-        bottom = numpy.zeros((1, dimension))
-        shifted = numpy.row_stack([top, bottom])
-        # Add matricies together
-        transition = transition + shifted
+        transition = factor * numpy.eye(dimension, dimension)
 
         return transition
 
-    def harmonic_transition(period, factor=1):
-        # Create sine and cosine
+    def polynomial(self, dimension: "int", factor: "float" = 1) -> "numpy.ndarray":
+
+        transition = self.basic(dimension, factor)
+
+        shifted = self.form_free(dimension)
+        if dimension > 0:
+            shifted[dimension, 0] = 0
+
+        transition += shifted
+
+        return transition
+
+    def harmonic(self, period: "int", factor: "float" = 1) -> "numpy.ndarray":
+
         frequency = 2 * math.pi / period
         cosine = math.cos(frequency)
         sine = math.sin(frequency)
-        # Create 2d rotation matrix (harmonic matrix)
+
         transition = factor * numpy.array(
             [
                 [cosine, sine],
@@ -84,29 +92,33 @@ class TransitionFactory:
 
         return transition
 
-    def harmonics_transition(start, amount, factor=1):
-        # Create index + 1 of last harmonic
+    def harmonics(
+        self, start: "int", amount: "int", factor: "float" = 1
+    ) -> "numpy.ndarray":
+
         end = start + amount
-        # Create list of harmonics
-        harmonics = [
-            harmonic_transition(period, factor) for period in range(start, end)
-        ]
-        # Join harmonics into one harmonic matrix
+
+        harmonics = [self.harmonic(period, factor) for period in range(start, end)]
+
         transition = block_diag(*harmonics)
 
         return transition
 
-    def autoregression_transition(dimension, data):
-        # Create form free matrix
-        transition = form_free_transition(dimension)
-        # Inject data into form free
+    def autoregression(
+        self, dimension: "int", data: "numpy.ndarray"
+    ) -> "numpy.ndarray":
+
+        transition = self.form_free(dimension)
+
         transition[0] = data
 
         return transition
 
-    def form_free_transition(dimension, factor=1):
+    def form_free(self, dimension: "int", factor: "float" = 1) -> "numpy.ndarray":
 
-        return factor * numpy.roll(numpy.eye(dimension), shift=-1, axis=1)
+        transition = numpy.roll(self.basic(dimension, factor), shift=-1, axis=1)
+
+        return transition
 
 
 @dataclass
@@ -169,4 +181,4 @@ class ComponentFactory:
 
 
 if __name__ == "__main__":
-    print(array_slicer(numpy.array([1, 5, 3, 6, 3]), -4, 3))
+    print(numpy.roll(numpy.eye(5), 1, 1))
