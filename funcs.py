@@ -1,4 +1,5 @@
-from memory import UpdaterDLM, PrimeMemoryDLM
+from memory import PrimeMemoryDLM
+from updater import UpdaterDLM
 
 
 def forward(prime_memory: "PrimeMemoryDLM", memory: "UpdaterDLM") -> "UpdaterDLM":
