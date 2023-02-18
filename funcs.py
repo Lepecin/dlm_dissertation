@@ -67,8 +67,8 @@ def beyond(
 
     for time in range(predicted_period):
 
-        evolver = evolvers[0]
-        observer = observers[0]
+        evolver = evolvers.get_from_time(0)
+        observer = observers.get_from_time(0)
 
         memory.predict(time, evolver)
         memory.observe_predicted(time, observer)
