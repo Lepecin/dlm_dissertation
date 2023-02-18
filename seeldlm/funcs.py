@@ -3,9 +3,9 @@ from .updater import UpdaterDLM
 
 
 class ModellerDLM:
-    def __init__(self, prime_memory: "PrimeMemoryDLM", updater: "UpdaterDLM"):
+    def __init__(self, prime_memory: "PrimeMemoryDLM"):
         self.prime_memory = prime_memory
-        self.memory = updater
+        self.memory = UpdaterDLM(prime_memory.S, prime_memory.P)
 
     def forward(self):
 
