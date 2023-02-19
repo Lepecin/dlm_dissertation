@@ -3,7 +3,6 @@ import numpy
 
 from scipy.linalg import block_diag
 from typing import List, Dict, Tuple
-from itertools import permutations
 
 
 def array_slicer(
@@ -192,37 +191,58 @@ class ComponentFactory:
         )
 
 
-def model_compiler(
-    root_dimension: "int",
-    components: "List[ModelComponent]",
-    vertices: "Dict[Tuple[int, int], List[int]]",
-) -> "Tuple[numpy.ndarray, numpy.ndarray]":
+class ModelCompiler:
+    def __init__(
+        self,
+        root_dimension: "int",
+    ):
+        self.M = root_dimension
+        self.components: "List[ModelComponent]" = list()
+        self.vertices: "Dict[Tuple[int, int], List[int]]" = dict()
 
-    amount = len(components)
+    def add_component_sequence(self, *args: "ModelComponent"):
+        self.components = list(args)
 
-    transition_block = amount * [amount * [None]]
-    observation_block = amount * [None]
+    def set_vertex(self, x: "int", y: "int", indices: "List[int]"):
+        if x == y:
+            raise BaseException(f"x={x} and y={y} have to differ")
+        self.vertices[(x, y)] = indices
 
-    for index in range(amount):
+    def transition_block(self, x: "int", y: "int") -> "numpy.ndarray":
+        if x == y:
+            return self.components[y].transition
+        else:
+            if not (x, y) in self.vertices:
+                indices = []
+            else:
+                indices = self.vertices[(x, y)]
+            return self.components[y].covariate(self.components[x].dimension, indices)
 
-        if not (-1, index) in vertices:
+    def observation_block(self, y: "int") -> "numpy.ndarray":
+
+        if not (-1, y) in self.vertices:
             indices = []
         else:
-            indices = vertices[(-1, index)]
+            indices = self.vertices[(-1, y)]
 
-        transition_block[index][index] = components[index].transition
-        observation_block[index] = components[index].covariate(root_dimension, indices)
+        return self.components[y].covariate(self.M, indices)
 
-    for index in permutations(range(amount), 2):
+    def compile_transition(self) -> "numpy.ndarray":
 
-        if not index in vertices:
-            indices = []
-        else:
-            indices = vertices[index]
+        amount = len(self.components)
 
-        x, y = index
-        transition_block[x][y] = components[y].covariate(
-            components[x].dimension, indices
-        )
+        block_matrix: "List[List[numpy.ndarray]]" = list()
+        for x in range(amount):
+            horizontal_block = [self.transition_block(x, y) for y in range(amount)]
+            block_matrix.append(horizontal_block)
 
-    return numpy.block(transition_block), numpy.block(observation_block)
+        return numpy.block(block_matrix)
+
+    def compile_observation(self) -> "numpy.ndarray":
+
+        amount = len(self.components)
+
+        block_matrix: "List[numpy.ndarray]"
+        block_matrix = [self.observation_block(y) for y in range(amount)]
+
+        return numpy.block(block_matrix)
