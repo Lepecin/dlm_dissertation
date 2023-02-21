@@ -1,4 +1,4 @@
-from typing import Dict, Generator, TypeVar, Generic, List
+from typing import Dict, Generator, TypeVar, Generic
 from scipy.stats import t as gen_t
 
 from .objects import NormalModel, InvWishartModel, TransitionModel
