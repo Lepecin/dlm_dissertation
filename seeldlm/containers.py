@@ -16,13 +16,13 @@ class ModelContainer(Generic[T]):
         return self.container.__len__()
 
     def get_from_time(self, time: "int") -> "T":
-        return self.container[time - self.start]
+        return self.container[time]
 
     def set_at_time(self, time: "int", object: "T"):
-        self.container[time - self.start] = object
+        self.container[time] = object
 
     def generate_container(self) -> "Generator[T]":
-        for index in range(self.end - self.start + 1):
+        for index in range(self.start, self.end + 1):
             if not index in self.container:
                 raise BaseException("Incomplete container")
             yield self.container[index]
