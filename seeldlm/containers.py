@@ -10,8 +10,6 @@ class ModelContainer(Generic[T]):
     def __init__(self, start: "int", end: "int"):
 
         self.container: "Dict[int, T]" = dict()
-        self.start = start
-        self.end = end
 
     def __len__(self) -> "int":
         return self.container.__len__()
@@ -22,27 +20,28 @@ class ModelContainer(Generic[T]):
     def set_at_time(self, time: "int", object: "T"):
         self.container[time] = object
 
-    def generate_container(self) -> "Generator[T]":
-        for index in range(self.start, self.end + 1):
+    def generate_container(self, start: "int", end: "int") -> "Generator[T]":
+        for index in range(start, end + 1):
             if not index in self.container:
                 raise BaseException("Incomplete container")
             yield self.container[index]
-
-    def list_container(self) -> "List[T]":
-        return list(self.generate_container())
 
 
 class NormalContainer(ModelContainer[NormalModel]):
     def __init__(self, start: "int", end: "int"):
         super().__init__(start, end)
 
-    def mean(self, feature: "int", subject: "int") -> "Generator[float]":
-        for model in self.generate_container():
+    def mean(
+        self, start: "int", end: "int", feature: "int", subject: "int"
+    ) -> "Generator[float]":
+        for model in self.generate_container(start, end):
             value = model.mean[feature, subject]
             yield value
 
-    def covariance(self, feature_x: "int", feature_y: "int") -> "Generator[float]":
-        for model in self.generate_container():
+    def covariance(
+        self, start: "int", end: "int", feature_x: "int", feature_y: "int"
+    ) -> "Generator[float]":
+        for model in self.generate_container(start, end):
             value = model.covariance[feature_x, feature_y]
             yield value
 
@@ -51,18 +50,22 @@ class InvWishartContainer(ModelContainer[InvWishartModel]):
     def __init__(self, start: "int", end: "int"):
         super().__init__(start, end)
 
-    def scale(self, subject_x: "int", subject_y: "int") -> "Generator[float]":
-        for model in self.generate_container():
+    def scale(
+        self, start: "int", end: "int", subject_x: "int", subject_y: "int"
+    ) -> "Generator[float]":
+        for model in self.generate_container(start, end):
             value = model.scale[subject_x, subject_y]
             yield value
 
-    def shape(self) -> "Generator[int]":
-        for model in self.generate_container():
+    def shape(self, start: "int", end: "int") -> "Generator[int]":
+        for model in self.generate_container(start, end):
             value = model.shape
             yield value
 
-    def t_shape(self, significance_level: "float") -> "Generator[float]":
-        for shape in self.shape():
+    def t_shape(
+        self, start: "int", end: "int", significance_level: "float"
+    ) -> "Generator[float]":
+        for shape in self.shape(start, end):
             value = gen_t.ppf(1 - significance_level / 2, shape)
             yield value
 
