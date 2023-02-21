@@ -30,6 +30,11 @@ class NormalModel:
 
         return InvWishartModel(scale, shape)
 
+    def transform(self, matrix: "numpy.ndarray") -> "NormalModel":
+        new_mean = matrix.dot(self.mean)
+        new_covariance = matrix.dot(self.covariance).dot(matrix.T)
+        return NormalModel(new_mean, new_covariance)
+
 
 class TransitionModel:
     def __init__(
