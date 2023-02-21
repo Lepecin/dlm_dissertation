@@ -100,6 +100,22 @@ class JointModel:
 
         return JointModel(normal, transition)
 
+    def generate_normal(self) -> "NormalModel":
+
+        new_normal = self.mutate_normal()
+
+        M = self.normal.mean
+        S = self.normal.covariance
+        A = self.transition.weights
+        alt_covariance = S.dot(A.T)
+
+        new_mean = numpy.block([[new_normal], [M]])
+        new_covariance = numpy.block(
+            [[new_normal.covariance, alt_covariance.T], [alt_covariance, S]]
+        )
+
+        return NormalModel(new_mean, new_covariance)
+
 
 class InvWishartModel:
     def __init__(self, scale: "numpy.ndarray", shape: "int"):
