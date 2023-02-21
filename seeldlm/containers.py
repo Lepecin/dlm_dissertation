@@ -1,4 +1,5 @@
 from typing import Dict, Generator, TypeVar, Generic, List
+from scipy.stats import t as gen_t
 
 from .objects import NormalModel, InvWishartModel, TransitionModel
 
@@ -58,6 +59,11 @@ class InvWishartContainer(ModelContainer[InvWishartModel]):
     def shape(self) -> "Generator[int]":
         for model in self.generate_container():
             value = model.shape
+            yield value
+
+    def t_shape(self, significance_level: "float") -> "Generator[float]":
+        for shape in self.shape():
+            value = gen_t.ppf(1 - significance_level / 2, shape)
             yield value
 
 
