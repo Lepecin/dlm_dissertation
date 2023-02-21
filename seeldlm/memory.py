@@ -1,12 +1,7 @@
 from numpy import ndarray
 
 from .objects import NormalModel, InvWishartModel
-from .containers import (
-    NormalContainer,
-    InvWishartContainer,
-    TransitionContainer,
-    ModelContainer,
-)
+from .containers import NormalContainer, InvWishartContainer, TransitionContainer
 
 
 class PrimeMemoryDLM:
