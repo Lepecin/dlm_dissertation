@@ -8,13 +8,17 @@ T = TypeVar("T")
 
 class ModelContainer(Generic[T]):
     def __init__(self, start: "int", end: "int"):
-
+        self.start = start
+        self.end = end
         self.container: "Dict[int, T]" = dict()
 
     def __len__(self) -> "int":
         return self.container.__len__()
 
     def get_from_time(self, time: "int") -> "T":
+        if not self.start <= time <= self.end:
+            raise BaseException(f"Set outside interval [{self.start},{self.end}]")
+
         return self.container[time]
 
     def set_at_time(self, time: "int", object: "T"):
