@@ -1,20 +1,36 @@
 from numpy import ndarray
-from typing import List, Any
+from typing import Dict, Generator, TypeVar, Generic, List
 
-from .objects import NormalModel, InvWishartModel
+from .objects import NormalModel, InvWishartModel, TransitionModel
 
 
-class ModelContainer:
+T = TypeVar("T")
+
+
+class ModelContainer(Generic[T]):
     def __init__(self, start: "int", end: "int"):
 
-        self.container: "List[Any]" = max(1, end - start + 1) * [None]
+        self.container: "Dict[int, T]" = dict()
         self.start = start
+        self.end = end
 
-    def get_from_time(self, time: "int") -> "Any":
+    def __len__(self) -> "int":
+        return self.container.__len__()
+
+    def get_from_time(self, time: "int") -> "T":
         return self.container[time - self.start]
 
-    def set_at_time(self, time: "int", object: "Any"):
+    def set_at_time(self, time: "int", object: "T"):
         self.container[time - self.start] = object
+
+    def generate_container(self) -> "Generator[T]":
+        for index in range(self.end - self.start + 1):
+            if not index in self.container:
+                raise BaseException("Incomplete container")
+            yield self.container[index]
+
+    def list_container(self) -> "List[T]":
+        return list(self.generate_container())
 
 
 class PrimeMemoryDLM:
@@ -25,8 +41,8 @@ class PrimeMemoryDLM:
         observations: "ndarray",
         primordial_model: "NormalModel",
         primordial_error: "InvWishartModel",
-        evolvers: "ModelContainer",
-        observers: "ModelContainer",
+        evolvers: "ModelContainer[TransitionModel]",
+        observers: "ModelContainer[TransitionModel]",
     ):
 
         self.S = observed_period
@@ -54,20 +70,20 @@ class MemoryDLM:
         self.P = P
 
         # -- Space Models
-        self.filtered_states = ModelContainer(0, S)
-        self.evolved_states = ModelContainer(1, S)
-        self.smoothed_states = ModelContainer(0, S)
-        self.predicted_states = ModelContainer(S, S + P)
+        self.filtered_states: "ModelContainer[NormalModel]" = ModelContainer(0, S)
+        self.evolved_states: "ModelContainer[NormalModel]" = ModelContainer(1, S)
+        self.smoothed_states: "ModelContainer[NormalModel]" = ModelContainer(0, S)
+        self.predicted_states: "ModelContainer[NormalModel]" = ModelContainer(S, S + P)
 
         # -- Space Models
-        self.filtered_spaces = ModelContainer(1, S)
-        self.evolved_spaces = ModelContainer(1, S)
-        self.smoothed_spaces = ModelContainer(1, S)
-        self.predicted_spaces = ModelContainer(S, S + P)
+        self.filtered_spaces: "ModelContainer[NormalModel]" = ModelContainer(1, S)
+        self.evolved_spaces: "ModelContainer[NormalModel]" = ModelContainer(1, S)
+        self.smoothed_spaces: "ModelContainer[NormalModel]" = ModelContainer(1, S)
+        self.predicted_spaces: "ModelContainer[NormalModel]" = ModelContainer(S, S + P)
 
         # -- Transitions
-        self.smoothers = ModelContainer(1, S)
-        self.filterers = ModelContainer(1, S)
+        self.smoothers: "ModelContainer[TransitionModel]" = ModelContainer(1, S)
+        self.filterers: "ModelContainer[TransitionModel]" = ModelContainer(1, S)
 
         # -- Error Matrix
-        self.wisharts = ModelContainer(0, S)
+        self.wisharts: "ModelContainer[InvWishartModel]" = ModelContainer(0, S)
