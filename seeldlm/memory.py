@@ -46,20 +46,20 @@ class MemoryDLM:
         self.P = P
 
         # -- Space Models
-        self.filtered_states: "NormalContainer" = ModelContainer(0, S)
-        self.evolved_states: "NormalContainer" = ModelContainer(1, S)
-        self.smoothed_states: "NormalContainer" = ModelContainer(0, S)
-        self.predicted_states: "NormalContainer" = ModelContainer(S, S + P)
+        self.filtered_states: "NormalContainer" = NormalContainer(0, S)
+        self.evolved_states: "NormalContainer" = NormalContainer(1, S)
+        self.smoothed_states: "NormalContainer" = NormalContainer(0, S)
+        self.predicted_states: "NormalContainer" = NormalContainer(S, S + P)
 
         # -- Space Models
-        self.filtered_spaces: "NormalContainer" = ModelContainer(1, S)
-        self.evolved_spaces: "NormalContainer" = ModelContainer(1, S)
-        self.smoothed_spaces: "NormalContainer" = ModelContainer(1, S)
-        self.predicted_spaces: "NormalContainer" = ModelContainer(S, S + P)
+        self.filtered_spaces: "NormalContainer" = NormalContainer(1, S)
+        self.evolved_spaces: "NormalContainer" = NormalContainer(1, S)
+        self.smoothed_spaces: "NormalContainer" = NormalContainer(1, S)
+        self.predicted_spaces: "NormalContainer" = NormalContainer(S, S + P)
 
         # -- Transitions
-        self.smoothers: "TransitionContainer" = ModelContainer(1, S)
-        self.filterers: "TransitionContainer" = ModelContainer(1, S)
+        self.smoothers: "TransitionContainer" = TransitionContainer(1, S)
+        self.filterers: "TransitionContainer" = TransitionContainer(1, S)
 
         # -- Error Matrix
-        self.wisharts: "InvWishartContainer" = ModelContainer(0, S)
+        self.wisharts: "InvWishartContainer" = InvWishartContainer(0, S)
