@@ -1,7 +1,6 @@
-from objects import NormalModel
 import numpy
+from seeldlm import NormalModel
 from numpy import ndarray as Array
-from typing import Tuple, List, Generator
 
 
 def rand_obs(shape: "Tuple[int, int]") -> "NormalModel":
@@ -17,16 +16,6 @@ def rand_nnd(dim: "int", shape: "int") -> "Array":
     a: "Array" = numpy.random.random((dim, dim + shape + 1))
 
     return a.dot(a.T)
-
-
-def relister(l: "list") -> "list":
-
-    return [l[-1 - i] for i in range(len(l))]
-
-
-def model_extract(model_list: "List[NormalModel]", index: "int") -> "Generator[float]":
-    for model in model_list:
-        yield model.mean[index].item()
 
 
 def random_nan(array: "numpy.ndarray", nans: "int") -> "numpy.ndarray":
