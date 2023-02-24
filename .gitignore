@@ -1,12 +1,11 @@
-__pycache__
+/share
+/bin
+/lib
+/data
+
 .mypy_cache
-bin
-include
-lib
-lib64
-pyvenv.cfg
-share
 .vscode
 
-data
-config.py
+__pycache__
+include
+lib64
