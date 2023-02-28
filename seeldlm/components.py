@@ -1,13 +1,12 @@
 import math
 import numpy
+from numpy.typing import NDArray
 
 from scipy.linalg import block_diag
 from typing import List, Dict, Tuple
 
 
-def array_slicer(
-    array: "numpy.ndarray", start: "int", amount: "int"
-) -> "numpy.ndarray":
+def array_slicer(array: "NDArray", start: "int", amount: "int") -> "NDArray":
 
     output = numpy.zeros((amount,))
 
@@ -36,7 +35,7 @@ class ObservationFactory:
     def __init__(self):
         pass
 
-    def basic(self, dimension: "int") -> "numpy.ndarray":
+    def basic(self, dimension: "int") -> "NDArray":
 
         observation = numpy.zeros((dimension,))
         if dimension > 0:
@@ -44,7 +43,7 @@ class ObservationFactory:
 
         return observation
 
-    def harmonics(self, amount: "int") -> "numpy.ndarray":
+    def harmonics(self, amount: "int") -> "NDArray":
 
         vector = self.basic(2)
         vectors = amount * [vector]
@@ -57,13 +56,13 @@ class TransitionFactory:
     def __init__(self):
         pass
 
-    def basic(self, dimension: "int", factor: "float" = 1) -> "numpy.ndarray":
+    def basic(self, dimension: "int", factor: "float" = 1) -> "NDArray":
 
         transition = factor * numpy.eye(dimension, dimension)
 
         return transition
 
-    def polynomial(self, dimension: "int", factor: "float" = 1) -> "numpy.ndarray":
+    def polynomial(self, dimension: "int", factor: "float" = 1) -> "NDArray":
 
         transition = self.basic(dimension, factor)
 
@@ -75,7 +74,7 @@ class TransitionFactory:
 
         return transition
 
-    def harmonic(self, period: "int", factor: "float" = 1) -> "numpy.ndarray":
+    def harmonic(self, period: "int", factor: "float" = 1) -> "NDArray":
 
         frequency = 2 * math.pi / period
         cosine = math.cos(frequency)
@@ -90,9 +89,7 @@ class TransitionFactory:
 
         return transition
 
-    def harmonics(
-        self, start: "int", amount: "int", factor: "float" = 1
-    ) -> "numpy.ndarray":
+    def harmonics(self, start: "int", amount: "int", factor: "float" = 1) -> "NDArray":
 
         end = start + amount
 
@@ -102,9 +99,7 @@ class TransitionFactory:
 
         return transition
 
-    def autoregression(
-        self, dimension: "int", data: "numpy.ndarray"
-    ) -> "numpy.ndarray":
+    def autoregression(self, dimension: "int", data: "NDArray") -> "NDArray":
 
         transition = self.form_free(dimension)
 
@@ -112,7 +107,7 @@ class TransitionFactory:
 
         return transition
 
-    def form_free(self, dimension: "int", factor: "float" = 1) -> "numpy.ndarray":
+    def form_free(self, dimension: "int", factor: "float" = 1) -> "NDArray":
 
         transition = numpy.roll(self.basic(dimension, factor), shift=-1, axis=1)
 
@@ -123,14 +118,14 @@ class ModelComponent:
     def __init__(
         self,
         dimension: "int",
-        transition: "numpy.ndarray",
-        observation: "numpy.ndarray",
+        transition: "NDArray",
+        observation: "NDArray",
     ):
         self.dimension = dimension
         self.transition = transition
         self.observation = observation
 
-    def covariate(self, dimension: "int", indices: "List[int]" = []) -> "numpy.ndarray":
+    def covariate(self, dimension: "int", indices: "List[int]" = []) -> "NDArray":
 
         template = numpy.zeros((dimension, self.dimension))
 
@@ -173,7 +168,7 @@ class ComponentFactory:
         )
 
     def regression(
-        self, start: "int", amount: "int", data: "numpy.ndarray"
+        self, start: "int", amount: "int", data: "NDArray"
     ) -> "ModelComponent":
         return ModelComponent(
             amount,
@@ -181,9 +176,7 @@ class ComponentFactory:
             array_slicer(data, start, amount),
         )
 
-    def autoregression(
-        self, dimension: "int", data: "numpy.ndarray"
-    ) -> "ModelComponent":
+    def autoregression(self, dimension: "int", data: "NDArray") -> "ModelComponent":
         return ModelComponent(
             dimension,
             self.transition_factory.autoregression(dimension, data),
@@ -208,7 +201,7 @@ class ModelCompiler:
             raise BaseException(f"x={x} and y={y} have to differ")
         self.vertices[(x, y)] = indices
 
-    def transition_block(self, x: "int", y: "int") -> "numpy.ndarray":
+    def transition_block(self, x: "int", y: "int") -> "NDArray":
         if x == y:
             return self.components[y].transition
         else:
@@ -218,7 +211,7 @@ class ModelCompiler:
                 indices = self.vertices[(x, y)]
             return self.components[y].covariate(self.components[x].dimension, indices)
 
-    def observation_block(self, y: "int") -> "numpy.ndarray":
+    def observation_block(self, y: "int") -> "NDArray":
 
         if not (-1, y) in self.vertices:
             indices = []
@@ -227,22 +220,22 @@ class ModelCompiler:
 
         return self.components[y].covariate(self.M, indices)
 
-    def compile_transition(self) -> "numpy.ndarray":
+    def compile_transition(self) -> "NDArray":
 
         amount = len(self.components)
 
-        block_matrix: "List[List[numpy.ndarray]]" = list()
+        block_matrix: "List[List[NDArray]]" = list()
         for x in range(amount):
             horizontal_block = [self.transition_block(x, y) for y in range(amount)]
             block_matrix.append(horizontal_block)
 
         return numpy.block(block_matrix)
 
-    def compile_observation(self) -> "numpy.ndarray":
+    def compile_observation(self) -> "NDArray":
 
         amount = len(self.components)
 
-        block_matrix: "List[numpy.ndarray]"
+        block_matrix: "List[NDArray]"
         block_matrix = [self.observation_block(y) for y in range(amount)]
 
         return numpy.block(block_matrix)

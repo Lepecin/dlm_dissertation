@@ -1,4 +1,4 @@
-from numpy import ndarray
+from numpy.typing import NDArray
 
 from .objects import NormalModel, InvWishartModel
 from .containers import NormalContainer, InvWishartContainer, TransitionContainer
@@ -9,7 +9,7 @@ class PrimeMemoryDLM:
         self,
         observed_period: "int",
         predicted_period: "int",
-        observations: "ndarray",
+        observations: "NDArray",
         primordial_model: "NormalModel",
         primordial_error: "InvWishartModel",
         evolvers: "TransitionContainer",

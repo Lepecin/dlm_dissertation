@@ -1,5 +1,5 @@
 from typing import Tuple
-from numpy import ndarray
+from numpy.typing import NDArray
 
 from .objects import NormalModel, TransitionModel, JointModel, InvWishartModel
 from .memory import MemoryDLM
@@ -49,7 +49,7 @@ class UpdaterDLM(MemoryDLM):
         self.filterers.set_at_time(time + 1, filterer)
         self.evolved_spaces.set_at_time(time + 1, evolved_space)
 
-    def filter(self, time: "int", observation: "ndarray"):
+    def filter(self, time: "int", observation: "NDArray"):
 
         evolved_space: "NormalModel" = self.evolved_spaces.get_from_time(time + 1)
         filterer: "TransitionModel" = self.filterers.get_from_time(time + 1)
