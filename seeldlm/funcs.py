@@ -21,8 +21,7 @@ class ModellerDLM:
 
         for time in range(observed_period):
 
-            observation = observations[time]
-            observation = observation.reshape((-1, 1))
+            observation = observations[:, :, time]
             evolver = evolvers.get_from_time(0)
             observer = observers.get_from_time(0)
 
