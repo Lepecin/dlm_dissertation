@@ -1,5 +1,6 @@
 from numpy.typing import NDArray
 from numpy import block as block_matrix
+from typing import Tuple
 
 from .normal import NormalModel
 from .transition import TransitionModel
@@ -61,3 +62,13 @@ class JointModel:
         )
 
         return NormalModel(new_mean, new_covariance)
+
+    def transition_transumer(
+        self,
+    ) -> "Tuple[NormalModel, TransitionModel]":
+
+        joint_model = self.mutate_joint_model()
+        model = joint_model.give_normal()
+        transition = joint_model.give_transition()
+
+        return model, transition

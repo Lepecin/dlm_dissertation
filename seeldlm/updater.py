@@ -5,28 +5,6 @@ from .objects import NormalModel, TransitionModel, JointModel, InvWishartModel
 from .memory import MemoryDLM
 
 
-def transition_transumer(
-    model: "NormalModel", transition: "TransitionModel"
-) -> "Tuple[NormalModel, TransitionModel]":
-
-    joint_model = JointModel(model, transition)
-    joint_model = joint_model.mutate_joint_model()
-    model = joint_model.give_normal()
-    transition = joint_model.give_transition()
-
-    return model, transition
-
-
-def model_transmuter(
-    model: "NormalModel", transition: "TransitionModel"
-) -> "NormalModel":
-
-    joint_model = JointModel(model, transition)
-    model = joint_model.mutate_normal()
-
-    return model
-
-
 class UpdaterDLM(MemoryDLM):
     def __init__(self, observed_period: "int", predicted_period: "int"):
         super().__init__(observed_period, predicted_period)
@@ -35,7 +13,8 @@ class UpdaterDLM(MemoryDLM):
 
         filtered_state: "NormalModel" = self.filtered_states.get_from_time(time)
 
-        evolved_state, smoother = transition_transumer(filtered_state, evolver)
+        joint_model = JointModel(filtered_state, evolver)
+        evolved_state, smoother = joint_model.transition_transumer()
 
         self.smoothers.set_at_time(time + 1, smoother)
         self.evolved_states.set_at_time(time + 1, evolved_state)
@@ -44,7 +23,8 @@ class UpdaterDLM(MemoryDLM):
 
         evolved_state: "NormalModel" = self.evolved_states.get_from_time(time + 1)
 
-        evolved_space, filterer = transition_transumer(evolved_state, observer)
+        joint_model = JointModel(evolved_state, observer)
+        evolved_space, filterer = joint_model.transition_transumer()
 
         self.filterers.set_at_time(time + 1, filterer)
         self.evolved_spaces.set_at_time(time + 1, evolved_space)
@@ -65,7 +45,8 @@ class UpdaterDLM(MemoryDLM):
 
         filtered_state: "NormalModel" = self.filtered_states.get_from_time(time + 1)
 
-        filtered_space = model_transmuter(filtered_state, observer)
+        joint_model = JointModel(filtered_state, observer)
+        filtered_space = joint_model.mutate_normal()
 
         self.filtered_spaces.set_at_time(time + 1, filtered_space)
 
@@ -76,7 +57,8 @@ class UpdaterDLM(MemoryDLM):
             self.S - time
         )
 
-        smoothed_state = model_transmuter(smoothed_state, smoother)
+        joint_model = JointModel(smoothed_state, smoother)
+        smoothed_state = joint_model.mutate_normal()
 
         self.smoothed_states.set_at_time(self.S - time - 1, smoothed_state)
 
@@ -86,7 +68,8 @@ class UpdaterDLM(MemoryDLM):
             self.S - time
         )
 
-        smoothed_space = model_transmuter(smoothed_state, observer)
+        joint_model = JointModel(smoothed_state, observer)
+        smoothed_space = joint_model.mutate_normal()
 
         self.smoothed_spaces.set_at_time(self.S - time, smoothed_space)
 
@@ -96,7 +79,8 @@ class UpdaterDLM(MemoryDLM):
             self.S + time
         )
 
-        predicted_state = model_transmuter(predicted_state, evolver)
+        joint_model = JointModel(predicted_state, evolver)
+        predicted_state = joint_model.mutate_normal()
 
         self.predicted_states.set_at_time(self.S + time + 1, predicted_state)
 
@@ -106,6 +90,7 @@ class UpdaterDLM(MemoryDLM):
             self.S + time + 1
         )
 
-        predicted_space = model_transmuter(predicted_state, observer)
+        joint_model = JointModel(predicted_state, observer)
+        predicted_space = joint_model.mutate_normal()
 
         self.predicted_spaces.set_at_time(self.S + time + 1, predicted_space)

@@ -91,3 +91,8 @@ class InvWishartContainer(ModelContainer[InvWishartModel]):
 class TransitionContainer(ModelContainer[TransitionModel]):
     def __init__(self, start: "int", end: "int"):
         super().__init__(start, end)
+
+
+class ArrayContainer(ModelContainer[NDArray]):
+    def __init__(self, start: "int", end: "int"):
+        super().__init__(start, end)

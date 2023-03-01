@@ -1,7 +1,12 @@
 from numpy.typing import NDArray
 
 from .objects import NormalModel, InvWishartModel
-from .containers import NormalContainer, InvWishartContainer, TransitionContainer
+from .containers import (
+    NormalContainer,
+    InvWishartContainer,
+    TransitionContainer,
+    ArrayContainer,
+)
 
 
 class PrimeMemoryDLM:
@@ -58,3 +63,9 @@ class MemoryDLM:
 
         # -- Error Matrix
         self.wisharts: "InvWishartContainer" = InvWishartContainer(0, S + 1)
+
+        # -- EM Estimates
+        self.state_em: "ArrayContainer" = ArrayContainer(1, S + 1)
+        self.space_em: "ArrayContainer" = ArrayContainer(1, S + 1)
+        self.scale_em: "NDArray" = ArrayContainer(0, 1)
+        self.primordial_em: "NDArray" = ArrayContainer(0, 1)
