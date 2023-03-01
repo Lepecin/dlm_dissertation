@@ -15,14 +15,16 @@ class NormalModel:
         self.covariance = covariance
         self.inv_covariance: "Optional[NDArray]" = None
 
-    def invert_covariance(self):
+    def invert_covariance(self) -> "NDArray":
 
         if self.inv_covariance is None:
             self.inv_covariance = inverse_matrix(symmetrise(self.covariance))
 
         return self.inv_covariance
 
-    def update_wishart(self, wishart: "InvWishartModel", observation: "NDArray"):
+    def update_wishart(
+        self, wishart: "InvWishartModel", observation: "NDArray"
+    ) -> "InvWishartModel":
 
         error = self.mean - observation  # (P, N)
         inv_covariance = self.invert_covariance()  # (P, P)
@@ -50,7 +52,7 @@ class TransitionModel:
         self.weights = weights
         self.covariance = covariance
 
-    def observe(self, observation: "NDArray"):
+    def observe(self, observation: "NDArray") -> "NormalModel":
 
         B = self.bias
         A = self.weights
@@ -67,13 +69,13 @@ class JointModel:
         self.normal = normal
         self.transition = transition
 
-    def give_normal(self):
+    def give_normal(self) -> "NormalModel":
         return self.normal
 
-    def give_transition(self):
+    def give_transition(self) -> "TransitionModel":
         return self.transition
 
-    def mutate_normal(self):
+    def mutate_normal(self) -> "NormalModel":
 
         M = self.normal.mean
         S = self.normal.covariance
@@ -86,7 +88,7 @@ class JointModel:
 
         return NormalModel(mean, covariance)
 
-    def mutate_joint_model(self):
+    def mutate_joint_model(self) -> "JointModel":
 
         normal = self.mutate_normal()
         M = self.normal.mean
