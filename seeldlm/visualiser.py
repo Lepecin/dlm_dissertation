@@ -103,7 +103,6 @@ class PredictableVisual(VisualStategy):
             self.S, self.S + 1, significance_level
         )
         errors = t_shapes * numpy.sqrt(row_covariances * column_covariances / shapes)
-        numpy.repeat(errors, repeats=self.P + 1)
 
         return errors
 
