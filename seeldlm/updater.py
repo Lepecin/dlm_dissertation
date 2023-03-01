@@ -1,5 +1,5 @@
-from typing import Tuple
 from numpy.typing import NDArray
+import numpy
 
 from .objects import NormalModel, TransitionModel, JointModel, InvWishartModel
 from .memory import MemoryDLM
@@ -61,6 +61,31 @@ class UpdaterDLM(MemoryDLM):
         smoothed_state = joint_model.mutate_normal()
 
         self.smoothed_states.set_at_time(self.S - time - 1, smoothed_state)
+
+    def create_state_em(self, time: "int", evolver: "TransitionModel"):
+
+        smoother: "TransitionModel" = self.smoothers.get_from_time(self.S - time)
+        smoothed_state: "NormalModel" = self.smoothed_states.get_from_time(
+            self.S - time
+        )
+
+        joint_model = JointModel(smoothed_state, smoother)
+        pre_true_density = joint_model.generate_normal()
+
+        transformer = numpy.block(
+            [[numpy.eye(*evolver.weights.shape), evolver.weights]]
+        )
+        true_density = pre_true_density.transform(transformer)
+
+        true_wishart = self.wisharts.get_from_time(self.S)
+
+        target_density = NormalModel(evolver.bias, evolver.covariance)
+
+        em_estimate = target_density.derive_row_covariance_em_estimate(
+            true_density, true_wishart
+        )
+
+        self.state_em.set_at_time(self.S - time, em_estimate)
 
     def observe_smoothed(self, time: "int", observer: "TransitionModel"):
 
